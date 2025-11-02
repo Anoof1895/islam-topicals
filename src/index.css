@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+/* Import Faruma font support */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic&display=swap');
+
+/* Fallback for Dhivehi text */
+body {
+  font-family: 'Faruma', 'MV Typewriter', 'Noto Sans Arabic', sans-serif;
+}
+
+/* Ensure Dhivehi text uses Faruma */
+.dhivehi-text {
+  font-family: 'Faruma', 'MV Typewriter', 'Noto Sans Arabic', sans-serif;
+}

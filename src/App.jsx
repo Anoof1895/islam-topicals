@@ -3,6 +3,7 @@ import allQuestions from "./questionsData";
 import Filters from "./components/Filters";
 import QuestionList from "./components/QuestionList";
 import QuestionView from "./pages/QuestionView";
+import { topicNames, getTopicName } from "./topicNames";
 
 const App = () => {
   const [selectedFilters, setSelectedFilters] = useState({});
@@ -24,7 +25,8 @@ const App = () => {
     2: "Dheyha",
     3: "Haadhisaa", 
     4: "Gina Marks",
-    5: "Ehenihen"
+    5: "Ehenihen",
+    6: "Dhiraasaa"
   };
 
   const options = useMemo(() => ({
@@ -33,7 +35,9 @@ const App = () => {
     paperSet: [...new Set(allQuestions.map(q => q.paperSet))],
     paper: [...new Set(allQuestions.map(q => q.paper))],
     unit: [...new Set(allQuestions.map(q => q.unit))],
-    topic: [...new Set(allQuestions.map(q => q.topic))],
+    topic: [...new Set(allQuestions.flatMap(q => 
+      String(q.topic).split('_').map(t => parseInt(t))
+    ).filter(t => !isNaN(t)))],
     types: [...new Set(allQuestions.flatMap(q => q.types))],
   }), []);
 
@@ -46,7 +50,25 @@ const App = () => {
           return values.some(selectedType => q.types.includes(selectedType));
         }
         
-        return values.includes(q[field]);
+        if (field === 'topic') {
+          // Handle multiple topics with underscores - FIXED THIS PART
+          const questionTopic = String(q.topic);
+          const selectedTopics = values.map(v => String(v)); // Convert selected to strings
+          
+          // Check if any selected topic matches the question's topic(s)
+          return selectedTopics.some(selectedTopic => {
+            // If question has multiple topics (e.g., "13_14_15_16")
+            if (questionTopic.includes('_')) {
+              const questionTopics = questionTopic.split('_');
+              return questionTopics.includes(selectedTopic);
+            }
+            // If question has single topic
+            return questionTopic === selectedTopic;
+          });
+        }
+        
+        // For other fields, convert both to string for comparison
+        return values.map(v => String(v)).includes(String(q[field]));
       })
     );
 
@@ -70,8 +92,8 @@ const App = () => {
         <div className="px-8 py-5">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Exam Prep</h1>
-              <p className="text-gray-600 mt-1">Islamic Studies Past Papers</p>
+              <h1 className="text-3xl font-bold text-gray-900">SSC ISLAM</h1>
+              <p className="text-gray-600 mt-1">Topical Past Papers</p>
             </div>
             <div className="text-right">
               <div className="text-2xl font-bold text-blue-600">{filteredQuestions.length}</div>
@@ -92,6 +114,7 @@ const App = () => {
           onSearch={() => setSelectedQuestionId(null)}
           unitNames={unitNames}
           questionTypes={questionTypes}
+          topicNames={topicNames}
         />
         
         {/* Side-by-side layout */}
@@ -103,6 +126,7 @@ const App = () => {
               selectedQuestionId={selectedQuestionId}
               setSelectedQuestionId={setSelectedQuestionId}
               unitNames={unitNames}
+              getTopicName={getTopicName}
             />
           </div>
           
@@ -114,6 +138,7 @@ const App = () => {
               setSelectedQuestionId={setSelectedQuestionId}
               unitNames={unitNames}
               questionTypes={questionTypes}
+              getTopicName={getTopicName}
             />
           </div>
         </div>

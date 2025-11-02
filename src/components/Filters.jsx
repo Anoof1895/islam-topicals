@@ -1,12 +1,24 @@
 import React from "react";
 import Select from "react-select";
 
-const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitNames, questionTypes }) => {
+const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitNames, questionTypes, topicNames }) => {
   const handleChange = (field, selected) => {
-    setSelectedFilters(prev => ({
-      ...prev,
+    const newFilters = {
+      ...selectedFilters,
       [field]: selected ? selected.map(s => s.value) : [],
-    }));
+    };
+
+    // If book or unit changes, clear the topic filter
+    if (field === 'book' || field === 'unit') {
+      newFilters.topic = [];
+    }
+
+    // If year changes and it's not 2021, clear the paperSet filter
+    if (field === 'year' && !selected?.some(s => s.value === 2021)) {
+      newFilters.paperSet = [];
+    }
+
+    setSelectedFilters(newFilters);
   };
 
   const customStyles = {
@@ -50,12 +62,46 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
     }),
   };
 
+  // Get available topics based on selected book and unit
+  const getAvailableTopics = () => {
+    const selectedBook = selectedFilters.book?.[0];
+    const selectedUnit = selectedFilters.unit?.[0];
+    
+    if (selectedBook && selectedUnit && topicNames && topicNames[selectedBook] && topicNames[selectedBook][selectedUnit]) {
+      return Object.keys(topicNames[selectedBook][selectedUnit]).map(topicId => ({
+        value: topicId,
+        label: `${topicId} - ${topicNames[selectedBook][selectedUnit][topicId]}`
+      }));
+    }
+    
+    // If no book/unit selected, return empty array (no topics to show)
+    return [];
+  };
+
+  // Get the current value for the topic dropdown
+  const getTopicValue = () => {
+    const availableTopics = getAvailableTopics();
+    return selectedFilters.topic?.map(topicId => {
+      const topicOption = availableTopics.find(topic => topic.value === topicId);
+      return topicOption || { value: topicId, label: `Topic ${topicId}` };
+    }) || [];
+  };
+
+  // Check if 2021 is selected
+  const is2021Selected = selectedFilters.year?.includes(2021);
+
   const formatOptions = (field, values) => {
+    // For topic field, use the filtered available topics
+    if (field === 'topic') {
+      return getAvailableTopics();
+    }
+
     return values.map(value => {
       let label = value;
-      if (field === 'unit' && unitNames[value]) {
+      
+      if (field === 'unit' && unitNames && unitNames[value]) {
         label = `Unit ${value}: ${unitNames[value]}`;
-      } else if (field === 'types' && questionTypes[value]) {
+      } else if (field === 'types' && questionTypes && questionTypes[value]) {
         label = questionTypes[value];
       } else if (field === 'paper') {
         label = `Paper ${value}`;
@@ -64,6 +110,7 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
       } else if (field === 'book') {
         label = `Book ${value}`;
       }
+      
       return { value, label };
     });
   };
@@ -115,14 +162,24 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
             <Select
               options={formatOptions(field, options[field])}
               isMulti
-              placeholder={`All`}
-              value={selectedFilters[field]?.map(val => {
-                const formatted = formatOptions(field, [val])[0]; // Fixed typo: was 'ffield'
+              placeholder={
+                field === 'topic' && (!selectedFilters.book?.[0] || !selectedFilters.unit?.[0]) 
+                  ? "Select book & unit first" 
+                  : field === 'paperSet' && !is2021Selected
+                  ? "Only for 2021"
+                  : "All"
+              }
+              value={field === 'topic' ? getTopicValue() : selectedFilters[field]?.map(val => {
+                const formatted = formatOptions(field, [val])[0];
                 return formatted || { value: val, label: val };
               }) || []}
               onChange={(selected) => handleChange(field, selected)}
               styles={customStyles}
               className="text-sm"
+              isDisabled={
+                (field === 'topic' && (!selectedFilters.book?.[0] || !selectedFilters.unit?.[0])) ||
+                (field === 'paperSet' && !is2021Selected)
+              }
             />
           </div>
         ))}

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 
-const QuestionList = ({ questions, selectedQuestionId, setSelectedQuestionId, unitNames }) => {
+const QuestionList = ({ questions, selectedQuestionId, setSelectedQuestionId, unitNames, getTopicName }) => {
   const containerRef = useRef(null);
   const itemRefs = useRef({});
 
@@ -15,7 +15,8 @@ const QuestionList = ({ questions, selectedQuestionId, setSelectedQuestionId, un
 
   const getQuestionDisplayText = (q) => {
     const unitName = unitNames[q.unit] || `Unit ${q.unit}`;
-    return `${q.year}_Paper${q.paper}_Book${q.book}_${unitName}_Topic${q.topic}_Q${q.questionNumber}`;
+    const topicName = getTopicName(q.book, q.unit, q.topic);
+    return `${q.year}_Paper${q.paper}_Book${q.book}_${unitName}_${topicName}_Q${q.questionNumber}`;
   };
 
   return (
@@ -69,10 +70,21 @@ const QuestionList = ({ questions, selectedQuestionId, setSelectedQuestionId, un
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <div className={`font-mono text-sm leading-relaxed ${
+                      <div className={`text-sm leading-relaxed ${
                         isSelected ? "text-blue-800 font-semibold" : "text-gray-800"
                       }`}>
-                        {getQuestionDisplayText(q)}
+                        <div className="font-mono text-xs text-gray-500 mb-1">
+                          {q.year}_Paper{q.paper}_Book{q.book}
+                        </div>
+                        <div className="font-semibold">
+                          {unitNames[q.unit] || `Unit ${q.unit}`}
+                        </div>
+                        <div className="text-xs mt-1" style={{ fontFamily: 'Faruma, Arial' }}>
+                          {getTopicName(q.book, q.unit, q.topic)}
+                        </div>
+                        <div className="font-mono text-xs text-gray-500 mt-1">
+                          Q{q.questionNumber}
+                        </div>
                       </div>
                     </div>
                     {isSelected && (

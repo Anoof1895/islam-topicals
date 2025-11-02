@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, questionTypes }) => {
+const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, questionTypes, getTopicName }) => {
   const [showAnswer, setShowAnswer] = useState(false);
   const scrollContainerRef = useRef(null);
 
@@ -127,7 +127,12 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
           <div className="w-px h-4 bg-gray-300"></div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-gray-700">Topic:</span>
-            <span className="text-sm text-gray-900">{question.topic}</span>
+            <span 
+              className="text-sm text-gray-900"
+              style={{ fontFamily: 'Faruma, Arial' }}
+            >
+              {getTopicName(question.book, question.unit, question.topic)}
+            </span>
           </div>
         </div>
       </div>
