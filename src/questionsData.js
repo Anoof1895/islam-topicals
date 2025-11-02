@@ -1731,7 +1731,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2022-1-2-2-1-4-5-ms.png"
   },
   {
-    "id": 217,
+    "id": 218,
     "name": "9-2022-1-2-2-2-18-4",
     "book": 9,
     "year": 2022,
@@ -1744,10 +1744,10 @@ const allQuestions = [
       4
     ],
     "image": "/questions/9-2022-1-2-2-2-18-4.png",
-    "answerImage": null
+    "answerImage": "/questions/9-2022-1-2-2-2-18-4-ms.png"
   },
   {
-    "id": 219,
+    "id": 220,
     "name": "9-2022-1-2-2-3-6-2",
     "book": 9,
     "year": 2022,
@@ -1763,7 +1763,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2022-1-2-2-3-6-2-ms.png"
   },
   {
-    "id": 221,
+    "id": 222,
     "name": "9-2023-1-2-1-2-2-5",
     "book": 9,
     "year": 2023,
@@ -1779,7 +1779,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2023-1-2-1-2-2-5-ms.png"
   },
   {
-    "id": 223,
+    "id": 224,
     "name": "9-2023-1-2-1-3-14-4",
     "book": 9,
     "year": 2023,
@@ -1795,7 +1795,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2023-1-2-1-3-14-4-ms.png"
   },
   {
-    "id": 225,
+    "id": 226,
     "name": "9-2023-1-2-1-3-3-2",
     "book": 9,
     "year": 2023,
@@ -1811,7 +1811,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2023-1-2-1-3-3-2-ms.png"
   },
   {
-    "id": 227,
+    "id": 228,
     "name": "9-2023-1-2-1-4-16-4",
     "book": 9,
     "year": 2023,
@@ -1827,7 +1827,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2023-1-2-1-4-16-4-ms.png"
   },
   {
-    "id": 229,
+    "id": 230,
     "name": "9-2023-1-2-2-1-4-5",
     "book": 9,
     "year": 2023,
@@ -1843,7 +1843,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2023-1-2-2-1-4-5-ms.png"
   },
   {
-    "id": 231,
+    "id": 232,
     "name": "9-2023-1-2-2-3-19-4",
     "book": 9,
     "year": 2023,
@@ -1859,7 +1859,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2023-1-2-2-3-19-4-ms.png"
   },
   {
-    "id": 233,
+    "id": 234,
     "name": "9-2023-1-2-2-3-6-2",
     "book": 9,
     "year": 2023,
@@ -1875,7 +1875,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2023-1-2-2-3-6-2-ms.png"
   },
   {
-    "id": 235,
+    "id": 236,
     "name": "9-2024-1-2-1-1-1-5",
     "book": 9,
     "year": 2024,
@@ -1891,7 +1891,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2024-1-2-1-1-1-5-ms.png"
   },
   {
-    "id": 237,
+    "id": 238,
     "name": "9-2024-1-2-1-2-3-2_5",
     "book": 9,
     "year": 2024,
@@ -1908,7 +1908,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2024-1-2-1-2-3-2_5-ms.png"
   },
   {
-    "id": 239,
+    "id": 240,
     "name": "9-2024-1-2-1-4-15-4",
     "book": 9,
     "year": 2024,
@@ -1924,7 +1924,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2024-1-2-1-4-15-4-ms.png"
   },
   {
-    "id": 241,
+    "id": 242,
     "name": "9-2024-1-2-1-6-17a-4",
     "book": 9,
     "year": 2024,
@@ -1940,7 +1940,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2024-1-2-1-6-17a-4-ms.png"
   },
   {
-    "id": 243,
+    "id": 244,
     "name": "9-2024-1-2-1-6-17b-4",
     "book": 9,
     "year": 2024,
@@ -1956,7 +1956,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2024-1-2-1-6-17b-4-ms.png"
   },
   {
-    "id": 245,
+    "id": 246,
     "name": "9-2024-1-2-2-2-5-5",
     "book": 9,
     "year": 2024,
@@ -1972,7 +1972,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2024-1-2-2-2-5-5-ms.png"
   },
   {
-    "id": 247,
+    "id": 248,
     "name": "9-2024-1-2-2-3-18a-3",
     "book": 9,
     "year": 2024,
@@ -1988,7 +1988,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2024-1-2-2-3-18a-3-ms.png"
   },
   {
-    "id": 249,
+    "id": 250,
     "name": "9-2024-1-2-2-3-18b-3",
     "book": 9,
     "year": 2024,
@@ -2004,7 +2004,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2024-1-2-2-3-18b-3-ms.png"
   },
   {
-    "id": 251,
+    "id": 252,
     "name": "9-2025-1-2-1-2-1-5",
     "book": 9,
     "year": 2025,
@@ -2020,7 +2020,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2025-1-2-1-2-1-5-ms.png"
   },
   {
-    "id": 253,
+    "id": 254,
     "name": "9-2025-1-2-1-3-17-4",
     "book": 9,
     "year": 2025,
@@ -2036,7 +2036,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2025-1-2-1-3-17-4-ms.png"
   },
   {
-    "id": 255,
+    "id": 256,
     "name": "9-2025-1-2-1-5-15-4",
     "book": 9,
     "year": 2025,
@@ -2052,7 +2052,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2025-1-2-1-5-15-4-ms.png"
   },
   {
-    "id": 257,
+    "id": 258,
     "name": "9-2025-1-2-2-1-19-4",
     "book": 9,
     "year": 2025,
@@ -2068,7 +2068,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2025-1-2-2-1-19-4-ms.png"
   },
   {
-    "id": 259,
+    "id": 260,
     "name": "9-2025-1-2-2-1-5-5",
     "book": 9,
     "year": 2025,
@@ -2084,7 +2084,7 @@ const allQuestions = [
     "answerImage": "/questions/9-2025-1-2-2-1-5-5-ms.png"
   },
   {
-    "id": 261,
+    "id": 262,
     "name": "9-2025-1-2-2-3-6-2",
     "book": 9,
     "year": 2025,
