@@ -25,7 +25,7 @@ const App = () => {
     2: "Dheyha",
     3: "Haadhisaa", 
     4: "Gina Marks",
-    5: "Ehenihen",
+    5: "Mauloomaathu",
     6: "Dhiraasaa"
   };
 
