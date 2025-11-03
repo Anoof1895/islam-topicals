@@ -153,7 +153,7 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
       </div>
       
       {/* Horizontal filter row */}
-      <div className="grid grid-cols-2 lg:grid-cols-7 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
         {Object.keys(options).map((field) => (
           <div key={field} className="flex flex-col">
             <label className="block text-sm font-semibold text-gray-800 mb-2">

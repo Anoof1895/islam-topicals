@@ -89,14 +89,14 @@ const App = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
       {/* Header */}
       <header className="bg-white border-b border-blue-200/50 shadow-sm">
-        <div className="px-8 py-5">
-          <div className="flex justify-between items-center">
+        <div className="px-4 lg:px-8 py-4 lg:py-5">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">SSC ISLAM</h1>
-              <p className="text-gray-600 mt-1">Topical Past Papers</p>
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">SSC ISLAM</h1>
+              <p className="text-gray-600 mt-1 text-sm lg:text-base">Topical Past Papers</p>
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-blue-600">{filteredQuestions.length}</div>
+            <div className="text-left sm:text-right">
+              <div className="text-xl lg:text-2xl font-bold text-blue-600">{filteredQuestions.length}</div>
               <div className="text-sm text-gray-500">
                 question{filteredQuestions.length !== 1 ? 's' : ''} found
               </div>
@@ -106,7 +106,7 @@ const App = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-4 lg:p-6">
         <Filters
           options={options}
           selectedFilters={selectedFilters}
@@ -117,10 +117,10 @@ const App = () => {
           topicNames={topicNames}
         />
         
-        {/* Side-by-side layout */}
-        <div className="flex gap-6 mt-6 h-[calc(100vh-240px)]">
-          {/* Question List - Left Side */}
-          <div className="w-96 flex-shrink-0">
+        {/* Side-by-side layout - Stack on mobile */}
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 mt-4 lg:mt-6 h-auto lg:h-[calc(100vh-240px)]">
+          {/* Question List - Full width on mobile, fixed on desktop */}
+          <div className="w-full lg:w-96 flex-shrink-0 h-96 lg:h-auto">
             <QuestionList
               questions={filteredQuestions}
               selectedQuestionId={selectedQuestionId}
@@ -130,8 +130,8 @@ const App = () => {
             />
           </div>
           
-          {/* Question View - Right Side */}
-          <div className="flex-1 min-w-0">
+          {/* Question View - Full width on mobile, flex on desktop */}
+          <div className="flex-1 min-w-0 h-96 lg:h-auto">
             <QuestionView
               question={filteredQuestions.find(q => q.id === selectedQuestionId)}
               questions={filteredQuestions}

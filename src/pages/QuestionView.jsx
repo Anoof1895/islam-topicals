@@ -57,88 +57,90 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
   return (
     <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 h-full flex flex-col">
       {/* Fixed Header - Never scrolls */}
-      <div className="flex-shrink-0 p-6 border-b border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-t-xl">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                {showAnswer ? "Answer" : "Question"} {question.questionNumber}
-              </h2>
-              <div className="flex items-center gap-3 mt-2">
-                <span className="px-3 py-1.5 text-sm font-semibold bg-blue-100 text-blue-800 rounded-full shadow-sm">
-                  {currentIndex + 1} of {totalQuestions}
-                </span>
-                <span className="text-sm text-gray-600 font-medium">
-                  {getQuestionTypeNames(question.types)}
-                </span>
+      <div className="flex-shrink-0 p-4 lg:p-6 border-b border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-t-xl">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div>
+                <h2 className="text-xl lg:text-2xl font-bold text-gray-900">
+                  {showAnswer ? "Answer" : "Question"} {question.questionNumber}
+                </h2>
+                <div className="flex items-center gap-3 mt-2">
+                  <span className="px-3 py-1.5 text-sm font-semibold bg-blue-100 text-blue-800 rounded-full shadow-sm">
+                    {currentIndex + 1} of {totalQuestions}
+                  </span>
+                  <span className="text-sm text-gray-600 font-medium">
+                    {getQuestionTypeNames(question.types)}
+                  </span>
+                </div>
               </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              <button
+                className="flex-1 sm:flex-none px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={goPrevious}
+                disabled={currentIndex === 0}
+              >
+                ← Prev
+              </button>
+              <button
+                className="flex-1 sm:flex-none px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={goNext}
+                disabled={currentIndex === totalQuestions - 1}
+              >
+                Next →
+              </button>
+              <button
+                className={`flex-1 sm:flex-none px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md ${
+                  showAnswer
+                    ? "bg-green-600 text-white hover:bg-green-700"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
+                onClick={() => setShowAnswer(!showAnswer)}
+              >
+                {showAnswer ? "Question" : "Answer"}
+              </button>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <button
-              className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={goPrevious}
-              disabled={currentIndex === 0}
-            >
-              ← Previous
-            </button>
-            <button
-              className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={goNext}
-              disabled={currentIndex === totalQuestions - 1}
-            >
-              Next →
-            </button>
-            <button
-              className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md ${
-                showAnswer
-                  ? "bg-green-600 text-white hover:bg-green-700"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
-              }`}
-              onClick={() => setShowAnswer(!showAnswer)}
-            >
-              {showAnswer ? "Show Question" : "Show Answer"}
-            </button>
-          </div>
-        </div>
-        
-        {/* Question Info */}
-        <div className="mt-6 flex flex-wrap items-center gap-6">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-700">Year:</span>
-            <span className="text-sm text-gray-900">{question.year}</span>
-          </div>
-          <div className="w-px h-4 bg-gray-300"></div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-700">Paper:</span>
-            <span className="text-sm text-gray-900">{question.paper}</span>
-          </div>
-          <div className="w-px h-4 bg-gray-300"></div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-700">Book:</span>
-            <span className="text-sm text-gray-900">{question.book}</span>
-          </div>
-          <div className="w-px h-4 bg-gray-300"></div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-700">Unit:</span>
-            <span className="text-sm text-gray-900">{getUnitName(question.unit)}</span>
-          </div>
-          <div className="w-px h-4 bg-gray-300"></div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-700">Topic:</span>
-            <span 
-              className="text-sm text-gray-900"
-              style={{ fontFamily: 'Faruma, Arial' }}
-            >
-              {getTopicName(question.book, question.unit, question.topic)}
-            </span>
+          {/* Question Info */}
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-3 lg:gap-6">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-gray-700">Year:</span>
+              <span className="text-sm text-gray-900">{question.year}</span>
+            </div>
+            <div className="hidden sm:block w-px h-4 bg-gray-300"></div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-gray-700">Paper:</span>
+              <span className="text-sm text-gray-900">{question.paper}</span>
+            </div>
+            <div className="hidden sm:block w-px h-4 bg-gray-300"></div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-gray-700">Book:</span>
+              <span className="text-sm text-gray-900">{question.book}</span>
+            </div>
+            <div className="hidden sm:block w-px h-4 bg-gray-300"></div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-gray-700">Unit:</span>
+              <span className="text-sm text-gray-900">{getUnitName(question.unit)}</span>
+            </div>
+            <div className="hidden sm:block w-px h-4 bg-gray-300"></div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-gray-700">Topic:</span>
+              <span 
+                className="text-sm text-gray-900"
+                style={{ fontFamily: 'Faruma, Arial' }}
+              >
+                {getTopicName(question.book, question.unit, question.topic)}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Scrollable Question Image Area */}
-      <div className="flex-1 min-h-0 p-6 bg-gradient-to-br from-gray-50/50 to-blue-50/30">
+      <div className="flex-1 min-h-0 p-4 lg:p-6 bg-gradient-to-br from-gray-50/50 to-blue-50/30">
         <div className="h-full flex flex-col">
           {/* Status badge - Now changes color based on showAnswer */}
           <div className="text-center mb-4 flex-shrink-0">
@@ -162,7 +164,7 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
           <div className="flex-1 bg-white rounded-xl border-3 border-blue-300 shadow-lg overflow-hidden">
             <div 
               ref={scrollContainerRef}
-              className="h-full overflow-y-auto p-6 bg-white"
+              className="h-full overflow-y-auto p-4 lg:p-6 bg-white"
             >
               <div className="flex justify-center items-start min-h-full">
                 <img

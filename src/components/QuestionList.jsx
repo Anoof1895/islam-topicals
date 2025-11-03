@@ -22,7 +22,7 @@ const QuestionList = ({ questions, selectedQuestionId, setSelectedQuestionId, un
   return (
     <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 h-full overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="p-5 border-b border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-t-xl">
+      <div className="p-4 lg:p-5 border-b border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-t-xl">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold text-gray-900 text-lg">Questions</h3>
