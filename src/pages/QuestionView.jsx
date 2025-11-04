@@ -55,7 +55,7 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 h-full flex flex-col">
+    <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 h-full flex flex-col min-h-0">
       {/* Fixed Header - More compact */}
       <div className="flex-shrink-0 p-3 lg:p-6 border-b border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-t-xl">
         <div className="flex flex-col gap-3">
@@ -139,9 +139,9 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
         </div>
       </div>
 
-      {/* Scrollable Question Image Area - Better mobile optimization */}
+      {/* Scrollable Question Image Area - Better height management */}
       <div className="flex-1 min-h-0 p-3 lg:p-6 bg-gradient-to-br from-gray-50/50 to-blue-50/30">
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col min-h-0">
           {/* Status badge - Smaller on mobile */}
           <div className="text-center mb-3 flex-shrink-0">
             <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full border shadow-sm text-xs ${
@@ -160,8 +160,8 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
             </div>
           </div>
 
-          {/* Scrollable Image Container - Better mobile sizing */}
-          <div className="flex-1 bg-white rounded-xl border-2 lg:border-3 border-blue-300 shadow-lg overflow-hidden min-h-[250px] sm:min-h-[350px] md:min-h-[450px] lg:min-h-[500px]">
+          {/* Scrollable Image Container - Better height management */}
+          <div className="flex-1 bg-white rounded-xl border-2 lg:border-3 border-blue-300 shadow-lg overflow-hidden min-h-0">
             <div 
               ref={scrollContainerRef}
               className="h-full overflow-y-auto p-3 lg:p-6 bg-white"
