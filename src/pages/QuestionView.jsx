@@ -139,8 +139,8 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
         </div>
       </div>
 
-      {/* Scrollable Question Image Area - Even bigger with proper styling */}
-      <div className="flex-1 min-h-0 p-6 bg-gradient-to-br from-gray-50/50 to-blue-50/30">
+      {/* Scrollable Question Image Area - Better responsive design */}
+      <div className="flex-1 min-h-0 p-4 lg:p-6 bg-gradient-to-br from-gray-50/50 to-blue-50/30">
         <div className="h-full flex flex-col">
           {/* Status badge */}
           <div className="text-center mb-4 flex-shrink-0">
@@ -160,11 +160,11 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
             </div>
           </div>
 
-          {/* Scrollable Image Container - Maximum height */}
-          <div className="flex-1 bg-white rounded-xl border-3 border-blue-300 shadow-lg overflow-hidden min-h-[550px]">
+          {/* Scrollable Image Container - Responsive height */}
+          <div className="flex-1 bg-white rounded-xl border-3 border-blue-300 shadow-lg overflow-hidden min-h-[300px] md:min-h-[400px] lg:min-h-[500px]">
             <div 
               ref={scrollContainerRef}
-              className="h-full overflow-y-auto p-6 bg-white"
+              className="h-full overflow-y-auto p-4 lg:p-6 bg-white"
             >
               <div className="flex justify-center items-start min-h-full">
                 <img
