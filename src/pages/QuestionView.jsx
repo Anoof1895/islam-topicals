@@ -139,11 +139,11 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
         </div>
       </div>
 
-      {/* Scrollable Question Image Area - Increased vertical space */}
-      <div className="flex-1 min-h-0 p-4 lg:p-4 bg-gradient-to-br from-gray-50/50 to-blue-50/30"> {/* Reduced padding from p-6 to p-4 */}
+      {/* Scrollable Question Image Area - Even bigger with proper styling */}
+      <div className="flex-1 min-h-0 p-6 bg-gradient-to-br from-gray-50/50 to-blue-50/30">
         <div className="h-full flex flex-col">
-          {/* Status badge - Now changes color based on showAnswer */}
-          <div className="text-center mb-3 flex-shrink-0"> {/* Reduced margin from mb-4 to mb-3 */}
+          {/* Status badge */}
+          <div className="text-center mb-4 flex-shrink-0">
             <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm ${
               showAnswer 
                 ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200" 
@@ -160,11 +160,11 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
             </div>
           </div>
 
-          {/* Scrollable Image Container - Increased height */}
-          <div className="flex-1 bg-white rounded-xl border-3 border-blue-300 shadow-lg overflow-hidden min-h-[500px]"> {/* Added min-h-[500px] */}
+          {/* Scrollable Image Container - Maximum height */}
+          <div className="flex-1 bg-white rounded-xl border-3 border-blue-300 shadow-lg overflow-hidden min-h-[550px]">
             <div 
               ref={scrollContainerRef}
-              className="h-full overflow-y-auto p-4 lg:p-4 bg-white" // Reduced padding from p-6 to p-4
+              className="h-full overflow-y-auto p-6 bg-white"
             >
               <div className="flex justify-center items-start min-h-full">
                 <img
