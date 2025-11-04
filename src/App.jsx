@@ -32,13 +32,13 @@ const App = () => {
   const options = useMemo(() => ({
     book: [...new Set(allQuestions.map(q => q.book))],
     year: [...new Set(allQuestions.map(q => q.year))],
-    paperSet: [...new Set(allQuestions.map(q => q.paperSet))],
     paper: [...new Set(allQuestions.map(q => q.paper))],
     unit: [...new Set(allQuestions.map(q => q.unit))],
     topic: [...new Set(allQuestions.flatMap(q => 
       String(q.topic).split('_').map(t => parseInt(t))
     ).filter(t => !isNaN(t)))],
     types: [...new Set(allQuestions.flatMap(q => q.types))],
+    paperType: ['specimen', 'actual'], // Add paperType options
   }), []);
 
   const filteredQuestions = useMemo(() => {
@@ -67,6 +67,21 @@ const App = () => {
           });
         }
         
+        // Handle paperType filter (Specimen vs Actual)
+        if (field === 'paperType') {
+          const isSpecimen = (q.year === 2021 && q.paperSet === 2) || (q.year === 2020 && q.paperSet === 1);
+          
+          if (values.includes('specimen') && values.includes('actual')) {
+            return true; // Show all if both are selected
+          }
+          if (values.includes('specimen')) {
+            return isSpecimen;
+          }
+          if (values.includes('actual')) {
+            return !isSpecimen;
+          }
+        }
+        
         // For other fields, convert both to string for comparison
         return values.map(v => String(v)).includes(String(q[field]));
       })
@@ -86,7 +101,7 @@ const App = () => {
   }, [selectedFilters]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
       {/* Header - More compact design */}
       <header className="bg-white border-b border-blue-200/50 shadow-sm">
         <div className="px-4 lg:px-8 py-3 lg:py-4"> {/* Reduced padding */}
@@ -105,7 +120,7 @@ const App = () => {
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content - This will grow to take available space */}
       <div className="flex-1 p-3 lg:p-6"> {/* Reduced padding on mobile */}
         <Filters
           options={options}
@@ -118,7 +133,7 @@ const App = () => {
         />
         
         {/* Side-by-side layout - More space for smaller screens */}
-        <div className="flex flex-col lg:flex-row gap-3 lg:gap-6 mt-3 lg:mt-6 h-auto lg:h-[calc(100vh-180px)]"> {/* Reduced gaps and increased space */}
+        <div className="flex flex-col lg:flex-row gap-3 lg:gap-6 mt-3 lg:mt-6 h-auto lg:h-[calc(100vh-240px)]"> {/* Adjusted height to account for footer */}
           {/* Question List - Full width on mobile, fixed on desktop */}
           <div className="w-full lg:w-96 flex-shrink-0 h-80 lg:h-full"> {/* Reduced mobile height */}
             <QuestionList
@@ -143,6 +158,20 @@ const App = () => {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-blue-200/50 py-4 mt-8">
+        <div className="container mx-auto px-4 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-3">
+            <div className="text-gray-600 text-sm">
+              2025 © islam-topicals.vercel.app
+            </div>
+            <div className="text-gray-500 text-xs md:text-sm">
+              Made with ❤️ by <span className="font-semibold text-gray-700">bakari-koshi</span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

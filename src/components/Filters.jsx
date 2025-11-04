@@ -13,11 +13,6 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
       newFilters.topic = [];
     }
 
-    // If year changes and it's not 2021, clear the paperSet filter
-    if (field === 'year' && !selected?.some(s => s.value === 2021)) {
-      newFilters.paperSet = [];
-    }
-
     setSelectedFilters(newFilters);
   };
 
@@ -87,13 +82,31 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
     }) || [];
   };
 
-  // Check if 2021 is selected
-  const is2021Selected = selectedFilters.year?.includes(2021);
+  // Format options for the new paper type filter
+  const getPaperTypeOptions = () => {
+    return [
+      { value: 'specimen', label: 'Specimen Papers' },
+      { value: 'actual', label: 'Actual Exam Papers' }
+    ];
+  };
+
+  // Get the current value for paper type filter
+  const getPaperTypeValue = () => {
+    return selectedFilters.paperType?.map(type => {
+      const option = getPaperTypeOptions().find(opt => opt.value === type);
+      return option || { value: type, label: type };
+    }) || [];
+  };
 
   const formatOptions = (field, values) => {
     // For topic field, use the filtered available topics
     if (field === 'topic') {
       return getAvailableTopics();
+    }
+
+    // For paperType field, use the specimen/actual options
+    if (field === 'paperType') {
+      return getPaperTypeOptions();
     }
 
     return values.map(value => {
@@ -105,8 +118,6 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
         label = questionTypes[value];
       } else if (field === 'paper') {
         label = `Paper ${value}`;
-      } else if (field === 'paperSet') {
-        label = `Set ${value}`;
       } else if (field === 'book') {
         label = `Book ${value}`;
       }
@@ -122,12 +133,15 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
   const fieldLabels = {
     book: 'Book',
     year: 'Year', 
-    paperSet: 'Set',
     paper: 'Paper',
+    paperType: 'Paper Type',
     unit: 'Unit',
     topic: 'Topic',
     types: 'Type'
   };
+
+  // Define the order of filters
+  const filterOrder = ['book', 'year', 'paper', 'paperType', 'unit', 'topic', 'types'];
 
   return (
     <div className="bg-white rounded-xl shadow-sm border-2 border-blue-200 p-6">
@@ -153,36 +167,42 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
       </div>
       
       {/* Horizontal filter row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
-        {Object.keys(options).map((field) => (
-          <div key={field} className="flex flex-col">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              {fieldLabels[field] || field}
-            </label>
-            <Select
-              options={formatOptions(field, options[field])}
-              isMulti
-              placeholder={
-                field === 'topic' && (!selectedFilters.book?.[0] || !selectedFilters.unit?.[0]) 
-                  ? "Select book & unit first" 
-                  : field === 'paperSet' && !is2021Selected
-                  ? "Only for 2021"
-                  : "All"
-              }
-              value={field === 'topic' ? getTopicValue() : selectedFilters[field]?.map(val => {
-                const formatted = formatOptions(field, [val])[0];
-                return formatted || { value: val, label: val };
-              }) || []}
-              onChange={(selected) => handleChange(field, selected)}
-              styles={customStyles}
-              className="text-sm"
-              isDisabled={
-                (field === 'topic' && (!selectedFilters.book?.[0] || !selectedFilters.unit?.[0])) ||
-                (field === 'paperSet' && !is2021Selected)
-              }
-            />
-          </div>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+        {filterOrder.map((field) => {
+          // Skip paperSet since we're replacing it with paperType
+          if (field === 'paperSet') return null;
+          
+          return (
+            <div key={field} className="flex flex-col">
+              <label className="block text-sm font-semibold text-gray-800 mb-2">
+                {fieldLabels[field] || field}
+              </label>
+              <Select
+                options={formatOptions(field, options[field])}
+                isMulti
+                placeholder={
+                  field === 'topic' && (!selectedFilters.book?.[0] || !selectedFilters.unit?.[0]) 
+                    ? "Select book & unit first" 
+                    : "All"
+                }
+                value={
+                  field === 'topic' ? getTopicValue() :
+                  field === 'paperType' ? getPaperTypeValue() :
+                  selectedFilters[field]?.map(val => {
+                    const formatted = formatOptions(field, [val])[0];
+                    return formatted || { value: val, label: val };
+                  }) || []
+                }
+                onChange={(selected) => handleChange(field, selected)}
+                styles={customStyles}
+                className="text-sm"
+                isDisabled={
+                  field === 'topic' && (!selectedFilters.book?.[0] || !selectedFilters.unit?.[0])
+                }
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );
