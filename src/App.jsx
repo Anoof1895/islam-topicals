@@ -87,9 +87,9 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-      {/* Header */}
+      {/* Header - Reduced padding */}
       <header className="bg-white border-b border-blue-200/50 shadow-sm">
-        <div className="px-4 lg:px-8 py-4 lg:py-5">
+        <div className="px-4 lg:px-8 py-3 lg:py-4"> {/* Reduced from py-4 lg:py-5 */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">SSC ISLAM</h1>
@@ -118,9 +118,9 @@ const App = () => {
         />
         
         {/* Side-by-side layout - Stack on mobile */}
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 mt-4 lg:mt-6 h-auto lg:h-[calc(100vh-240px)]">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 mt-4 lg:mt-6 h-auto lg:h-[calc(100vh-200px)]"> {/* Reduced from 240px to 200px */}
           {/* Question List - Full width on mobile, fixed on desktop */}
-          <div className="w-full lg:w-96 flex-shrink-0 h-96 lg:h-auto">
+          <div className="w-full lg:w-96 flex-shrink-0 h-96 lg:h-full"> {/* Changed to h-full */}
             <QuestionList
               questions={filteredQuestions}
               selectedQuestionId={selectedQuestionId}
@@ -131,7 +131,7 @@ const App = () => {
           </div>
           
           {/* Question View - Full width on mobile, flex on desktop */}
-          <div className="flex-1 min-w-0 h-96 lg:h-auto">
+          <div className="flex-1 min-w-0 h-96 lg:h-full"> {/* Changed to h-full */}
             <QuestionView
               question={filteredQuestions.find(q => q.id === selectedQuestionId)}
               questions={filteredQuestions}
