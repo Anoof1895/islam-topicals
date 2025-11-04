@@ -87,17 +87,17 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-      {/* Header - Restored original padding */}
+      {/* Header - More compact design */}
       <header className="bg-white border-b border-blue-200/50 shadow-sm">
-        <div className="px-4 lg:px-8 py-4 lg:py-5">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div className="px-4 lg:px-8 py-3 lg:py-4"> {/* Reduced padding */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2"> {/* Reduced gap */}
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">SSC ISLAM</h1>
-              <p className="text-gray-600 mt-1 text-sm lg:text-base">Topical Past Papers</p>
+              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">SSC ISLAM</h1> {/* Smaller text */}
+              <p className="text-gray-600 text-xs lg:text-sm mt-0.5">Topical Past Papers</p> {/* Smaller text */}
             </div>
             <div className="text-left sm:text-right">
-              <div className="text-xl lg:text-2xl font-bold text-blue-600">{filteredQuestions.length}</div>
-              <div className="text-sm text-gray-500">
+              <div className="text-lg lg:text-xl font-bold text-blue-600">{filteredQuestions.length}</div> {/* Smaller text */}
+              <div className="text-xs text-gray-500"> {/* Smaller text */}
                 question{filteredQuestions.length !== 1 ? 's' : ''} found
               </div>
             </div>
@@ -106,7 +106,7 @@ const App = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 p-4 lg:p-6">
+      <div className="flex-1 p-3 lg:p-6"> {/* Reduced padding on mobile */}
         <Filters
           options={options}
           selectedFilters={selectedFilters}
@@ -117,10 +117,10 @@ const App = () => {
           topicNames={topicNames}
         />
         
-        {/* Side-by-side layout - Adjusted for more vertical space */}
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 mt-4 lg:mt-6 h-auto lg:h-[calc(100vh-220px)]">
+        {/* Side-by-side layout - More space for smaller screens */}
+        <div className="flex flex-col lg:flex-row gap-3 lg:gap-6 mt-3 lg:mt-6 h-auto lg:h-[calc(100vh-180px)]"> {/* Reduced gaps and increased space */}
           {/* Question List - Full width on mobile, fixed on desktop */}
-          <div className="w-full lg:w-96 flex-shrink-0 h-96 lg:h-full">
+          <div className="w-full lg:w-96 flex-shrink-0 h-80 lg:h-full"> {/* Reduced mobile height */}
             <QuestionList
               questions={filteredQuestions}
               selectedQuestionId={selectedQuestionId}
@@ -131,7 +131,7 @@ const App = () => {
           </div>
           
           {/* Question View - Full width on mobile, flex on desktop */}
-          <div className="flex-1 min-w-0 h-96 lg:h-full">
+          <div className="flex-1 min-w-0 h-80 lg:h-full"> {/* Reduced mobile height */}
             <QuestionView
               question={filteredQuestions.find(q => q.id === selectedQuestionId)}
               questions={filteredQuestions}
