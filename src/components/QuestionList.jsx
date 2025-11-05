@@ -1,15 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 
-const QuestionList = ({ questions, selectedQuestionId, setSelectedQuestionId, unitNames, getTopicName }) => {
+const QuestionList = ({ questions, selectedQuestionId, setSelectedQuestionId, unitNames, getTopicName, favorites, toggleFavorite }) => {
   const containerRef = useRef(null);
   const itemRefs = useRef({});
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [showFavorites, setShowFavorites] = useState(false);
-  const [favorites, setFavorites] = useState(() => 
-    JSON.parse(localStorage.getItem('favoriteQuestions') || '[]')
-  );
   const questionsPerPage = 10;
 
   // Reset to page 1 when questions change significantly
@@ -46,15 +43,6 @@ const QuestionList = ({ questions, selectedQuestionId, setSelectedQuestionId, un
     }
   };
 
-  const toggleFavorite = (questionId, e) => {
-    e.stopPropagation();
-    const newFavorites = favorites.includes(questionId)
-      ? favorites.filter(id => id !== questionId)
-      : [...favorites, questionId];
-    setFavorites(newFavorites);
-    localStorage.setItem('favoriteQuestions', JSON.stringify(newFavorites));
-  };
-
   return (
     <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 h-full overflow-hidden flex flex-col">
       {/* Header */}
@@ -66,7 +54,6 @@ const QuestionList = ({ questions, selectedQuestionId, setSelectedQuestionId, un
               Page {currentPage} of {totalPages} • {questionsToDisplay.length} {showFavorites ? 'favorites' : 'total'}
             </p>
           </div>
-          {/* Changed from currentQuestions.length to questionsToDisplay.length */}
           <div className="bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold shadow-sm">
             {questionsToDisplay.length}
           </div>
@@ -152,7 +139,10 @@ const QuestionList = ({ questions, selectedQuestionId, setSelectedQuestionId, un
                         <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full animate-pulse"></div>
                       )}
                       <button
-                        onClick={(e) => toggleFavorite(q.id, e)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(q.id);
+                        }}
                         className={`p-1 rounded-full transition-colors ${
                           isFavorite ? "text-yellow-500 hover:text-yellow-600" : "text-gray-400 hover:text-yellow-500"
                         }`}

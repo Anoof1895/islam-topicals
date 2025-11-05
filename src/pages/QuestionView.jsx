@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 
-const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, questionTypes, getTopicName }) => {
+const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, questionTypes, getTopicName, onToggleFavorite, isFavorite }) => {
   const [showAnswer, setShowAnswer] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const [showFavoriteFeedback, setShowFavoriteFeedback] = useState(false);
   const scrollContainerRef = useRef(null);
 
   // Reset states when question changes
@@ -39,6 +40,11 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
             handlePrint();
           }
           break;
+        case 'f':
+        case 'F':
+          e.preventDefault();
+          handleFavorite();
+          break;
         case '?':
           e.preventDefault();
           setShowShortcutsHelp(prev => !prev);
@@ -53,7 +59,7 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [question, showAnswer]);
+  }, [question, showAnswer, isFavorite]);
 
   // Memoized navigation functions
   const goNext = useCallback(() => {
@@ -109,6 +115,15 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
     printWindow.print();
   };
 
+  // Favorite functionality
+  const handleFavorite = () => {
+    if (onToggleFavorite && question) {
+      onToggleFavorite(question.id);
+      setShowFavoriteFeedback(true);
+      setTimeout(() => setShowFavoriteFeedback(false), 2000);
+    }
+  };
+
   const handleImageLoad = () => {
     setImageLoading(false);
   };
@@ -155,6 +170,24 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
 
   return (
     <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 h-full flex flex-col min-h-0">
+      {/* Favorite Feedback Toast */}
+      {showFavoriteFeedback && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right duration-300">
+          <div className={`flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg border ${
+            isFavorite 
+              ? "bg-yellow-50 border-yellow-200 text-yellow-800" 
+              : "bg-blue-50 border-blue-200 text-blue-800"
+          }`}>
+            <svg className={`w-5 h-5 ${isFavorite ? "text-yellow-500" : "text-blue-500"}`} fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+            <span className="font-medium text-sm">
+              {isFavorite ? "Added to favorites!" : "Removed from favorites!"}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Keyboard Shortcuts Help Modal */}
       {showShortcutsHelp && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -182,6 +215,10 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
               <div className="flex items-center justify-between py-2 border-b border-gray-100">
                 <span className="text-gray-600">Toggle Question/Answer</span>
                 <kbd className="px-2 py-1 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Space</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">Toggle Favorite</span>
+                <kbd className="px-2 py-1 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">F</kbd>
               </div>
               <div className="flex items-center justify-between py-2 border-b border-gray-100">
                 <span className="text-gray-600">Print Current</span>
@@ -222,6 +259,14 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
                   <span className="text-xs lg:text-sm text-gray-600 font-medium bg-gray-100 px-2 py-1 rounded">
                     {getQuestionTypeNames(question.types)}
                   </span>
+                  {isFavorite && (
+                    <span className="px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full shadow-sm border border-yellow-200 flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                      </svg>
+                      Favorite
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -271,6 +316,20 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
                 Print
               </button>
               <button
+                onClick={handleFavorite}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md border-2 flex items-center gap-2 ${
+                  isFavorite
+                    ? "bg-yellow-100 text-yellow-700 border-yellow-300 hover:bg-yellow-200"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-blue-300"
+                }`}
+                title="Toggle favorite (F)"
+              >
+                <svg className="w-4 h-4" fill={isFavorite ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+                Favorite
+              </button>
+              <button
                 onClick={() => setShowShortcutsHelp(true)}
                 className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow-md"
                 title="Keyboard shortcuts (?)"
@@ -311,7 +370,7 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
             </div>
           </div>
 
-          {/* Keyboard Shortcuts Hint */}
+          {/* Keyboard Shortcuts Hint - UPDATED: Removed "F to favorite" */}
           <div className="text-xs text-gray-500 text-center">
             <span className="font-semibold">Tip:</span> Use <kbd className="px-1 mx-1 text-xs bg-gray-100 border border-gray-300 rounded shadow-sm">←</kbd> <kbd className="px-1 mx-1 text-xs bg-gray-100 border border-gray-300 rounded shadow-sm">→</kbd> to navigate, <kbd className="px-1 mx-1 text-xs bg-gray-100 border border-gray-300 rounded shadow-sm">Space</kbd> to toggle, <kbd className="px-1 mx-1 text-xs bg-gray-100 border border-gray-300 rounded shadow-sm">?</kbd> for help
           </div>

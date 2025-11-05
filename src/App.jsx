@@ -3,11 +3,16 @@ import allQuestions from "./questionsData";
 import Filters from "./components/Filters";
 import QuestionList from "./components/QuestionList";
 import QuestionView from "./pages/QuestionView";
+import UnseenTopics from "./pages/UnseenTopics";
 import { topicNames, getTopicName } from "./topicNames";
 
 const App = () => {
   const [selectedFilters, setSelectedFilters] = useState({});
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
+  const [favorites, setFavorites] = useState(() => 
+    JSON.parse(localStorage.getItem('favoriteQuestions') || '[]')
+  );
+  const [currentView, setCurrentView] = useState('main'); // 'main' or 'unseen-topics'
 
   // Unit name mapping
   const unitNames = {
@@ -29,16 +34,25 @@ const App = () => {
     6: "Dhiraasaa"
   };
 
+  // Toggle favorite function
+  const toggleFavorite = (questionId) => {
+    const newFavorites = favorites.includes(questionId)
+      ? favorites.filter(id => id !== questionId)
+      : [...favorites, questionId];
+    setFavorites(newFavorites);
+    localStorage.setItem('favoriteQuestions', JSON.stringify(newFavorites));
+  };
+
   const options = useMemo(() => ({
-    book: [...new Set(allQuestions.map(q => q.book))],
-    year: [...new Set(allQuestions.map(q => q.year))],
-    paper: [...new Set(allQuestions.map(q => q.paper))],
-    unit: [...new Set(allQuestions.map(q => q.unit))],
+    book: [...new Set(allQuestions.map(q => q.book))].sort((a, b) => a - b),
+    year: [...new Set(allQuestions.map(q => q.year))].sort((a, b) => b - a), // Most recent first
+    paper: [...new Set(allQuestions.map(q => q.paper))].sort((a, b) => a - b),
+    unit: [...new Set(allQuestions.map(q => q.unit))].sort((a, b) => a - b), // Fixed - now in order
     topic: [...new Set(allQuestions.flatMap(q => 
       String(q.topic).split('_').map(t => parseInt(t))
-    ).filter(t => !isNaN(t)))],
-    types: [...new Set(allQuestions.flatMap(q => q.types))],
-    paperType: ['specimen', 'actual'], // Add paperType options
+    ).filter(t => !isNaN(t)))].sort((a, b) => a - b),
+    types: [...new Set(allQuestions.flatMap(q => q.types))].sort((a, b) => a - b),
+    paperType: ['specimen', 'actual'],
   }), []);
 
   const filteredQuestions = useMemo(() => {
@@ -51,28 +65,23 @@ const App = () => {
         }
         
         if (field === 'topic') {
-          // Handle multiple topics with underscores - FIXED THIS PART
           const questionTopic = String(q.topic);
-          const selectedTopics = values.map(v => String(v)); // Convert selected to strings
+          const selectedTopics = values.map(v => String(v));
           
-          // Check if any selected topic matches the question's topic(s)
           return selectedTopics.some(selectedTopic => {
-            // If question has multiple topics (e.g., "13_14_15_16")
             if (questionTopic.includes('_')) {
               const questionTopics = questionTopic.split('_');
               return questionTopics.includes(selectedTopic);
             }
-            // If question has single topic
             return questionTopic === selectedTopic;
           });
         }
         
-        // Handle paperType filter (Specimen vs Actual)
         if (field === 'paperType') {
           const isSpecimen = (q.year === 2021 && q.paperSet === 2) || (q.year === 2020 && q.paperSet === 1);
           
           if (values.includes('specimen') && values.includes('actual')) {
-            return true; // Show all if both are selected
+            return true;
           }
           if (values.includes('specimen')) {
             return isSpecimen;
@@ -82,81 +91,119 @@ const App = () => {
           }
         }
         
-        // For other fields, convert both to string for comparison
         return values.map(v => String(v)).includes(String(q[field]));
       })
     );
 
-    // Sort by year (most recent first), then by question number
     return filtered.sort((a, b) => {
-      // First by year (descending - most recent first)
       if (b.year !== a.year) {
         return b.year - a.year;
       }
-      // Then by question number (convert to number for proper sorting)
       const aNum = parseInt(a.questionNumber) || 0;
       const bNum = parseInt(b.questionNumber) || 0;
       return aNum - bNum;
     });
   }, [selectedFilters]);
 
+  const renderMainView = () => (
+    <>
+      <Filters
+        options={options}
+        selectedFilters={selectedFilters}
+        setSelectedFilters={setSelectedFilters}
+        onSearch={() => setSelectedQuestionId(null)}
+        unitNames={unitNames}
+        questionTypes={questionTypes}
+        topicNames={topicNames}
+      />
+      
+      <div className="flex flex-col lg:flex-row gap-3 lg:gap-6 mt-3 lg:mt-6 flex-1 min-h-0">
+        <div className="w-full lg:w-96 flex-shrink-0 flex flex-col min-h-0">
+          <QuestionList
+            questions={filteredQuestions}
+            selectedQuestionId={selectedQuestionId}
+            setSelectedQuestionId={setSelectedQuestionId}
+            unitNames={unitNames}
+            getTopicName={getTopicName}
+            favorites={favorites}
+            toggleFavorite={toggleFavorite}
+          />
+        </div>
+        
+        <div className="flex-1 min-w-0 flex flex-col min-h-0">
+          <QuestionView
+            question={filteredQuestions.find(q => q.id === selectedQuestionId)}
+            questions={filteredQuestions}
+            setSelectedQuestionId={setSelectedQuestionId}
+            unitNames={unitNames}
+            questionTypes={questionTypes}
+            getTopicName={getTopicName}
+            onToggleFavorite={toggleFavorite}
+            isFavorite={selectedQuestionId ? favorites.includes(selectedQuestionId) : false}
+          />
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
-      {/* Header - More compact design */}
+      {/* Header - Updated with navigation */}
       <header className="bg-white border-b border-blue-200/50 shadow-sm">
         <div className="px-4 lg:px-8 py-3 lg:py-4">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-            <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">SSC ISLAM</h1>
-              <p className="text-gray-600 text-xs lg:text-sm mt-0.5">Topical Past Papers</p>
-            </div>
-            <div className="text-left sm:text-right">
-              <div className="text-lg lg:text-xl font-bold text-blue-600">{filteredQuestions.length}</div>
-              <div className="text-xs text-gray-500">
-                question{filteredQuestions.length !== 1 ? 's' : ''} found
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <div className="flex items-center gap-4">
+              <div>
+                <h1 className="text-xl lg:text-2xl font-bold text-gray-900">SSC ISLAM</h1>
+                <p className="text-gray-600 text-xs lg:text-sm mt-0.5">Topical Past Papers</p>
               </div>
+              
+              {/* Navigation Tabs */}
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setCurrentView('main')}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    currentView === 'main'
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  📚 Questions
+                </button>
+                <button
+                  onClick={() => setCurrentView('unseen-topics')}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    currentView === 'unseen-topics'
+                      ? "bg-white text-orange-600 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  🔍 Unseen Topics
+                </button>
+              </div>
+            </div>
+            
+            <div className="text-left sm:text-right">
+              {currentView === 'main' ? (
+                <>
+                  <div className="text-lg lg:text-xl font-bold text-blue-600">{filteredQuestions.length}</div>
+                  <div className="text-xs text-gray-500">
+                    question{filteredQuestions.length !== 1 ? 's' : ''} found
+                  </div>
+                </>
+              ) : (
+                <div className="text-orange-600 font-semibold text-sm">
+                  Study Focus Areas
+                </div>
+              )}
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content - This will grow to take available space */}
+      {/* Main Content */}
       <div className="flex-1 p-3 lg:p-6 flex flex-col min-h-0">
-        <Filters
-          options={options}
-          selectedFilters={selectedFilters}
-          setSelectedFilters={setSelectedFilters}
-          onSearch={() => setSelectedQuestionId(null)}
-          unitNames={unitNames}
-          questionTypes={questionTypes}
-          topicNames={topicNames}
-        />
-        
-        {/* Side-by-side layout - More flexible height */}
-        <div className="flex flex-col lg:flex-row gap-3 lg:gap-6 mt-3 lg:mt-6 flex-1 min-h-0">
-          {/* Question List - Full width on mobile, fixed on desktop */}
-          <div className="w-full lg:w-96 flex-shrink-0 flex flex-col min-h-0">
-            <QuestionList
-              questions={filteredQuestions}
-              selectedQuestionId={selectedQuestionId}
-              setSelectedQuestionId={setSelectedQuestionId}
-              unitNames={unitNames}
-              getTopicName={getTopicName}
-            />
-          </div>
-          
-          {/* Question View - Full width on mobile, flex on desktop */}
-          <div className="flex-1 min-w-0 flex flex-col min-h-0">
-            <QuestionView
-              question={filteredQuestions.find(q => q.id === selectedQuestionId)}
-              questions={filteredQuestions}
-              setSelectedQuestionId={setSelectedQuestionId}
-              unitNames={unitNames}
-              questionTypes={questionTypes}
-              getTopicName={getTopicName}
-            />
-          </div>
-        </div>
+        {currentView === 'main' ? renderMainView() : <UnseenTopics allQuestions={allQuestions} unitNames={unitNames} />}
       </div>
 
       {/* Footer */}
