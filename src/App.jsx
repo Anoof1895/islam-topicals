@@ -4,7 +4,9 @@ import Filters from "./components/Filters";
 import QuestionList from "./components/QuestionList";
 import QuestionView from "./pages/QuestionView";
 import UnseenTopics from "./pages/UnseenTopics";
+import QuizGenerator from "./pages/QuizGenerator";
 import { topicNames, getTopicName } from "./topicNames";
+import { useTheme } from "./context/ThemeContext";
 
 const App = () => {
   const [selectedFilters, setSelectedFilters] = useState({});
@@ -12,7 +14,8 @@ const App = () => {
   const [favorites, setFavorites] = useState(() => 
     JSON.parse(localStorage.getItem('favoriteQuestions') || '[]')
   );
-  const [currentView, setCurrentView] = useState('main'); // 'main' or 'unseen-topics'
+  const [currentView, setCurrentView] = useState('main'); // 'main', 'unseen-topics', 'quiz'
+  const { isDark, toggleTheme } = useTheme();
 
   // Unit name mapping
   const unitNames = {
@@ -45,9 +48,9 @@ const App = () => {
 
   const options = useMemo(() => ({
     book: [...new Set(allQuestions.map(q => q.book))].sort((a, b) => a - b),
-    year: [...new Set(allQuestions.map(q => q.year))].sort((a, b) => b - a), // Most recent first
+    year: [...new Set(allQuestions.map(q => q.year))].sort((a, b) => b - a),
     paper: [...new Set(allQuestions.map(q => q.paper))].sort((a, b) => a - b),
-    unit: [...new Set(allQuestions.map(q => q.unit))].sort((a, b) => a - b), // Fixed - now in order
+    unit: [...new Set(allQuestions.map(q => q.unit))].sort((a, b) => a - b),
     topic: [...new Set(allQuestions.flatMap(q => 
       String(q.topic).split('_').map(t => parseInt(t))
     ).filter(t => !isNaN(t)))].sort((a, b) => a - b),
@@ -146,36 +149,89 @@ const App = () => {
     </>
   );
 
+  const renderCurrentView = () => {
+    switch(currentView) {
+      case 'quiz':
+        return <QuizGenerator 
+          allQuestions={allQuestions} 
+          unitNames={unitNames}
+          questionTypes={questionTypes}
+          setSelectedQuestionId={setSelectedQuestionId}
+          setCurrentView={setCurrentView}
+        />;
+      case 'unseen-topics':
+        return <UnseenTopics allQuestions={allQuestions} unitNames={unitNames} />;
+      default:
+        return renderMainView();
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex flex-col">
-      {/* Header - Updated with navigation */}
-      <header className="bg-white border-b border-blue-200/50 shadow-sm">
+    <div className={`min-h-screen flex flex-col transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-br from-gray-900 to-gray-800 text-white' 
+        : 'bg-gradient-to-br from-slate-50 to-blue-50/30 text-gray-900'
+    }`}>
+      {/* Header - Updated with theme toggle and quiz navigation */}
+      <header className={`border-b shadow-sm transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gray-800 border-gray-700' 
+          : 'bg-white border-blue-200/50'
+      }`}>
         <div className="px-4 lg:px-8 py-3 lg:py-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
             <div className="flex items-center gap-4">
               <div>
-                <h1 className="text-xl lg:text-2xl font-bold text-gray-900">SSC ISLAM</h1>
-                <p className="text-gray-600 text-xs lg:text-sm mt-0.5">Topical Past Papers</p>
+                <h1 className="text-xl lg:text-2xl font-bold">SSC ISLAM</h1>
+                <p className={`text-xs lg:text-sm mt-0.5 ${
+                  isDark ? 'text-gray-400' : 'text-gray-600'
+                }`}>
+                  Topical Past Papers
+                </p>
               </div>
               
               {/* Navigation Tabs */}
-              <div className="flex bg-gray-100 rounded-lg p-1">
+              <div className={`flex rounded-lg p-1 ${
+                isDark ? 'bg-gray-700' : 'bg-gray-100'
+              }`}>
                 <button
                   onClick={() => setCurrentView('main')}
                   className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     currentView === 'main'
-                      ? "bg-white text-blue-600 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
+                      ? isDark
+                        ? "bg-gray-600 text-white shadow-sm"
+                        : "bg-white text-blue-600 shadow-sm"
+                      : isDark
+                        ? "text-gray-400 hover:text-gray-200"
+                        : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
                   📚 Questions
                 </button>
                 <button
+                  onClick={() => setCurrentView('quiz')}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    currentView === 'quiz'
+                      ? isDark
+                        ? "bg-gray-600 text-white shadow-sm"
+                        : "bg-white text-green-600 shadow-sm"
+                      : isDark
+                        ? "text-gray-400 hover:text-gray-200"
+                        : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  🎯 Quiz
+                </button>
+                <button
                   onClick={() => setCurrentView('unseen-topics')}
                   className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     currentView === 'unseen-topics'
-                      ? "bg-white text-orange-600 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
+                      ? isDark
+                        ? "bg-gray-600 text-white shadow-sm"
+                        : "bg-white text-orange-600 shadow-sm"
+                      : isDark
+                        ? "text-gray-400 hover:text-gray-200"
+                        : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
                   🔍 Unseen Topics
@@ -183,19 +239,48 @@ const App = () => {
               </div>
             </div>
             
-            <div className="text-left sm:text-right">
-              {currentView === 'main' ? (
-                <>
-                  <div className="text-lg lg:text-xl font-bold text-blue-600">{filteredQuestions.length}</div>
-                  <div className="text-xs text-gray-500">
-                    question{filteredQuestions.length !== 1 ? 's' : ''} found
+            <div className="flex items-center gap-4">
+              <div className="text-left sm:text-right">
+                {currentView === 'main' ? (
+                  <>
+                    <div className={`text-lg lg:text-xl font-bold ${
+                      isDark ? 'text-blue-400' : 'text-blue-600'
+                    }`}>
+                      {filteredQuestions.length}
+                    </div>
+                    <div className={`text-xs ${
+                      isDark ? 'text-gray-400' : 'text-gray-500'
+                    }`}>
+                      question{filteredQuestions.length !== 1 ? 's' : ''} found
+                    </div>
+                  </>
+                ) : currentView === 'quiz' ? (
+                  <div className={`font-semibold text-sm ${
+                    isDark ? 'text-green-400' : 'text-green-600'
+                  }`}>
+                    Practice Mode
                   </div>
-                </>
-              ) : (
-                <div className="text-orange-600 font-semibold text-sm">
-                  Study Focus Areas
-                </div>
-              )}
+                ) : (
+                  <div className={`font-semibold text-sm ${
+                    isDark ? 'text-orange-400' : 'text-orange-600'
+                  }`}>
+                    Study Focus Areas
+                  </div>
+                )}
+              </div>
+
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className={`p-2 rounded-lg transition-all duration-300 ${
+                  isDark
+                    ? 'bg-gray-700 text-yellow-300 hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? '☀️' : '🌙'}
+              </button>
             </div>
           </div>
         </div>
@@ -203,18 +288,28 @@ const App = () => {
 
       {/* Main Content */}
       <div className="flex-1 p-3 lg:p-6 flex flex-col min-h-0">
-        {currentView === 'main' ? renderMainView() : <UnseenTopics allQuestions={allQuestions} unitNames={unitNames} />}
+        {renderCurrentView()}
       </div>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-blue-200/50 py-4 mt-8">
+      <footer className={`border-t py-4 mt-8 transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gray-800 border-gray-700' 
+          : 'bg-white border-blue-200/50'
+      }`}>
         <div className="container mx-auto px-4 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-3">
-            <div className="text-gray-600 text-sm">
+            <div className={`text-sm ${
+              isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}>
               2025 © islam-topicals.vercel.app
             </div>
-            <div className="text-gray-500 text-xs md:text-sm">
-              Made with ❤️ by <span className="font-semibold text-gray-700">bakari-koshi</span>
+            <div className={`text-xs md:text-sm ${
+              isDark ? 'text-gray-500' : 'text-gray-500'
+            }`}>
+              Made with ❤️ by <span className={`font-semibold ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>bakari-koshi</span>
             </div>
           </div>
         </div>

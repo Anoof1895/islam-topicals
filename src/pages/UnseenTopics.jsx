@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from "react";
 import { topicNames, getTopicName } from "../topicNames";
+import { useTheme } from "../context/ThemeContext";
 
 const UnseenTopics = ({ allQuestions, unitNames }) => {
   const [excludeSpecimen, setExcludeSpecimen] = useState(false);
+  const { isDark } = useTheme();
 
   // Get all topics that have appeared in exams
   const seenTopics = useMemo(() => {
@@ -83,96 +85,118 @@ const UnseenTopics = ({ allQuestions, unitNames }) => {
 
   if (totalUnseen === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 py-8">
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 p-8 text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
-              <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {excludeSpecimen ? "All Topics Have Appeared in Actual Exams!" : "All Topics Have Appeared!"}
-            </h2>
-            <p className="text-gray-600 text-lg mb-6">
-              {excludeSpecimen 
-                ? "Great news! All topics have appeared in actual exam papers (excluding specimen papers)."
-                : "Great news! All topics in the syllabus have appeared in past papers at least once."}
-            </p>
-            <p className="text-gray-500">
-              Focus on topics that haven't appeared frequently or practice all areas equally.
-            </p>
-          </div>
+      <div className={`rounded-xl shadow-lg border-2 p-4 lg:p-8 text-center transition-colors duration-300 ${
+        isDark ? 'bg-gray-800 border-blue-900' : 'bg-white border-blue-200'
+      }`}>
+        <div className={`w-16 h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 lg:mb-6 shadow-inner ${
+          isDark ? 'bg-green-900' : 'bg-gradient-to-br from-green-100 to-emerald-100'
+        }`}>
+          <svg className="w-8 h-8 lg:w-10 lg:h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
         </div>
+        <h2 className={`text-xl lg:text-2xl font-bold mb-3 lg:mb-4 ${
+          isDark ? 'text-gray-100' : 'text-gray-900'
+        }`}>
+          {excludeSpecimen ? "All Topics Have Appeared in Actual Exams!" : "All Topics Have Appeared!"}
+        </h2>
+        <p className={`text-base lg:text-lg mb-4 lg:mb-6 ${
+          isDark ? 'text-gray-400' : 'text-gray-600'
+        }`}>
+          {excludeSpecimen 
+            ? "Great news! All topics have appeared in actual exam papers (excluding specimen papers)."
+            : "Great news! All topics in the syllabus have appeared in past papers at least once."}
+        </p>
+        <p className={`text-sm lg:text-base ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+          Focus on topics that haven't appeared frequently or practice all areas equally.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 py-8">
-      <div className="container mx-auto px-4 lg:px-8">
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 p-6 mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex-1">
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-                Unseen Topics {excludeSpecimen && "(Actual Exams Only)"}
-              </h1>
-              <p className="text-gray-600 text-lg mb-4">
-                Topics that haven't appeared in {excludeSpecimen ? "actual exam papers" : "past papers"} yet
-              </p>
-              
-              {/* Toggle Switch */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setExcludeSpecimen(!excludeSpecimen)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                    excludeSpecimen ? 'bg-blue-600' : 'bg-gray-200'
+    <div className="flex-1 flex flex-col min-h-0">
+      {/* Header */}
+      <div className={`rounded-xl shadow-lg border-2 p-4 lg:p-6 mb-4 lg:mb-8 transition-colors duration-300 ${
+        isDark ? 'bg-gray-800 border-blue-900' : 'bg-white border-blue-200'
+      }`}>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex-1">
+            <h1 className={`text-xl lg:text-3xl font-bold mb-2 ${
+              isDark ? 'text-gray-100' : 'text-gray-900'
+            }`}>
+              Unseen Topics {excludeSpecimen && "(Actual Exams Only)"}
+            </h1>
+            <p className={`text-base lg:text-lg mb-4 ${
+              isDark ? 'text-gray-400' : 'text-gray-600'
+            }`}>
+              Topics that haven't appeared in {excludeSpecimen ? "actual exam papers" : "past papers"} yet
+            </p>
+            
+            {/* Toggle Switch */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setExcludeSpecimen(!excludeSpecimen)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  excludeSpecimen ? 'bg-blue-600' : isDark ? 'bg-gray-600' : 'bg-gray-200'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    excludeSpecimen ? 'translate-x-6' : 'translate-x-1'
                   }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      excludeSpecimen ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-900">
-                    Exclude Specimen Papers
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {excludeSpecimen 
-                      ? "Only considering actual exam papers" 
-                      : "Including all papers (specimen + actual)"}
-                  </span>
-                </div>
+                />
+              </button>
+              <div className="flex flex-col">
+                <span className={`text-sm font-medium ${
+                  isDark ? 'text-gray-300' : 'text-gray-900'
+                }`}>
+                  Exclude Specimen Papers
+                </span>
+                <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                  {excludeSpecimen 
+                    ? "Only considering actual exam papers" 
+                    : "Including all papers (specimen + actual)"}
+                </span>
               </div>
             </div>
-            
-            <div className="bg-gradient-to-r from-yellow-100 to-orange-100 px-6 py-4 rounded-lg border-2 border-yellow-200">
-              <div className="text-2xl lg:text-3xl font-bold text-yellow-800 text-center">{totalUnseen}</div>
-              <div className="text-yellow-700 text-sm font-medium text-center">Unseen Topics</div>
-            </div>
+          </div>
+          
+          <div className={`px-4 lg:px-6 py-3 lg:py-4 rounded-lg border-2 ${
+            isDark 
+              ? 'bg-gradient-to-r from-yellow-900 to-orange-900 border-yellow-700' 
+              : 'bg-gradient-to-r from-yellow-100 to-orange-100 border-yellow-200'
+          }`}>
+            <div className={`text-2xl lg:text-3xl font-bold text-center ${
+              isDark ? 'text-yellow-200' : 'text-yellow-800'
+            }`}>{totalUnseen}</div>
+            <div className={`text-sm font-medium text-center ${
+              isDark ? 'text-yellow-300' : 'text-yellow-700'
+            }`}>Unseen Topics</div>
           </div>
         </div>
+      </div>
 
-        {/* Books */}
+      {/* Books - Scrollable Area */}
+      <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
         {Object.keys(unseenTopics).map(book => (
-          <div key={book} className="mb-8">
-            <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 overflow-hidden">
+          <div key={book} className="mb-4 lg:mb-8">
+            <div className={`rounded-xl shadow-lg border-2 overflow-hidden transition-colors duration-300 ${
+              isDark ? 'bg-gray-800 border-blue-900' : 'bg-white border-blue-200'
+            }`}>
               {/* Book Header */}
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6">
-                <h2 className="text-xl lg:text-2xl font-bold text-white">
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 lg:p-6">
+                <h2 className="text-lg lg:text-2xl font-bold text-white">
                   Book {book} - Unseen Topics {excludeSpecimen && "(Actual Exams)"}
                 </h2>
-                <p className="text-blue-100 mt-1">
+                <p className="text-blue-100 mt-1 text-sm lg:text-base">
                   {Object.values(unseenTopics[book]).reduce((sum, unit) => sum + unit.length, 0)} 
                   topics haven't appeared in {excludeSpecimen ? "actual exams" : "any papers"}
                 </p>
               </div>
 
               {/* Units */}
-              <div className="p-6">
+              <div className="p-4 lg:p-6">
                 {Object.keys(unseenTopics[book]).map(unit => {
                   const unitTopics = unseenTopics[book][unit];
                   if (unitTopics.length === 0) return null;
@@ -180,40 +204,54 @@ const UnseenTopics = ({ allQuestions, unitNames }) => {
                   return (
                     <div key={unit} className="mb-6 last:mb-0">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="bg-green-100 p-2 rounded-lg">
-                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className={`p-2 rounded-lg ${
+                          isDark ? 'bg-green-900' : 'bg-green-100'
+                        }`}>
+                          <svg className={`w-5 h-5 ${isDark ? 'text-green-400' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                           </svg>
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold text-gray-900">
+                          <h3 className={`text-base lg:text-lg font-bold ${
+                            isDark ? 'text-gray-100' : 'text-gray-900'
+                          }`}>
                             {unitNames[unit] || `Unit ${unit}`}
                           </h3>
-                          <p className="text-gray-600 text-sm">
+                          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                             {unitTopics.length} topic{unitTopics.length !== 1 ? 's' : ''} haven't appeared
                           </p>
                         </div>
                       </div>
 
                       {/* Topics Grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {unitTopics.map(topic => (
                           <div
                             key={topic.id}
-                            className="bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-lg p-4 hover:shadow-md transition-all duration-200"
+                            className={`rounded-lg p-3 lg:p-4 hover:shadow-md transition-all duration-200 border-2 ${
+                              isDark 
+                                ? 'bg-gradient-to-br from-yellow-900 to-orange-900 border-yellow-700' 
+                                : 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200'
+                            }`}
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="px-2 py-1 text-xs font-bold bg-yellow-500 text-white rounded-full">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                                  <span className="px-2 py-1 text-xs font-bold bg-yellow-500 text-white rounded-full w-fit">
                                     Topic {topic.id}
                                   </span>
-                                  <span className="text-xs text-yellow-700 font-medium bg-yellow-100 px-2 py-1 rounded">
+                                  <span className={`text-xs font-medium px-2 py-1 rounded w-fit ${
+                                    isDark 
+                                      ? 'text-yellow-300 bg-yellow-800' 
+                                      : 'text-yellow-700 bg-yellow-100'
+                                  }`}>
                                     Unseen
                                   </span>
                                 </div>
                                 <p 
-                                  className="text-gray-800 font-medium text-sm leading-relaxed"
+                                  className={`font-medium text-sm leading-relaxed ${
+                                    isDark ? 'text-gray-200' : 'text-gray-800'
+                                  }`}
                                   style={{ fontFamily: 'Faruma, Arial' }}
                                 >
                                   {topic.name}
@@ -232,28 +270,54 @@ const UnseenTopics = ({ allQuestions, unitNames }) => {
         ))}
 
         {/* Study Tips */}
-        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl shadow-lg border-2 border-purple-200 p-6 mt-8">
+        <div className={`rounded-xl shadow-lg border-2 p-4 lg:p-6 mt-4 lg:mt-8 transition-colors duration-300 ${
+          isDark 
+            ? 'bg-gradient-to-r from-purple-900 to-indigo-900 border-purple-700' 
+            : 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200'
+        }`}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-purple-100 p-2 rounded-lg">
-              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`p-2 rounded-lg ${
+              isDark ? 'bg-purple-800' : 'bg-purple-100'
+            }`}>
+              <svg className={`w-5 h-5 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-gray-900">Study Strategy</h3>
+            <h3 className={`text-lg font-bold ${
+              isDark ? 'text-gray-100' : 'text-gray-900'
+            }`}>Study Strategy</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
             <div className="space-y-2">
-              <p><strong>📚 Focus Priority:</strong> These topics are statistically more likely to appear in future exams.</p>
-              <p><strong>🎯 Smart Revision:</strong> Allocate more study time to unseen topics while maintaining knowledge of seen topics.</p>
+              <p className="flex items-start gap-2">
+                <span className="flex-shrink-0">📚</span>
+                <span><strong>Focus Priority:</strong> These topics are statistically more likely to appear in future exams.</span>
+              </p>
+              <p className="flex items-start gap-2">
+                <span className="flex-shrink-0">🎯</span>
+                <span><strong>Smart Revision:</strong> Allocate more study time to unseen topics while maintaining knowledge of seen topics.</span>
+              </p>
               {excludeSpecimen && (
-                <p><strong>🔴 Actual Exams Focus:</strong> You're viewing topics that haven't appeared in actual exams - these are high priority!</p>
+                <p className="flex items-start gap-2">
+                  <span className="flex-shrink-0">🔴</span>
+                  <span><strong>Actual Exams Focus:</strong> You're viewing topics that haven't appeared in actual exams - these are high priority!</span>
+                </p>
               )}
             </div>
             <div className="space-y-2">
-              <p><strong>⏰ Time Management:</strong> Since these haven't been tested, expect comprehensive questions that cover the entire topic.</p>
-              <p><strong>🔍 Be Prepared:</strong> Exam setters often include topics that haven't appeared for a while.</p>
+              <p className="flex items-start gap-2">
+                <span className="flex-shrink-0">⏰</span>
+                <span><strong>Time Management:</strong> Since these haven't been tested, expect comprehensive questions that cover the entire topic.</span>
+              </p>
+              <p className="flex items-start gap-2">
+                <span className="flex-shrink-0">🔍</span>
+                <span><strong>Be Prepared:</strong> Exam setters often include topics that haven't appeared for a while.</span>
+              </p>
               {!excludeSpecimen && (
-                <p><strong>💡 Pro Tip:</strong> Use the toggle to exclude specimen papers and focus only on actual exam patterns.</p>
+                <p className="flex items-start gap-2">
+                  <span className="flex-shrink-0">💡</span>
+                  <span><strong>Pro Tip:</strong> Use the toggle to exclude specimen papers and focus only on actual exam patterns.</span>
+                </p>
               )}
             </div>
           </div>
