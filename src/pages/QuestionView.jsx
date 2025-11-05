@@ -1,13 +1,74 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, questionTypes, getTopicName }) => {
   const [showAnswer, setShowAnswer] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const scrollContainerRef = useRef(null);
 
-  // Reset showAnswer when question changes
+  // Reset states when question changes
   useEffect(() => {
     setShowAnswer(false);
+    setImageLoading(true);
   }, [question]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Don't trigger shortcuts if user is typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      
+      switch(e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          goPrevious();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          goNext();
+          break;
+        case ' ':
+        case 'Spacebar':
+          e.preventDefault();
+          setShowAnswer(prev => !prev);
+          break;
+        case 'p':
+        case 'P':
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            handlePrint();
+          }
+          break;
+        case '?':
+          e.preventDefault();
+          setShowShortcutsHelp(prev => !prev);
+          break;
+        case 'Escape':
+          setShowShortcutsHelp(false);
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [question, showAnswer]);
+
+  // Memoized navigation functions
+  const goNext = useCallback(() => {
+    const currentIndex = questions.findIndex(q => Number(q.id) === Number(question.id));
+    if (currentIndex < questions.length - 1) {
+      setSelectedQuestionId(questions[currentIndex + 1].id);
+    }
+  }, [question, questions, setSelectedQuestionId]);
+
+  const goPrevious = useCallback(() => {
+    const currentIndex = questions.findIndex(q => Number(q.id) === Number(question.id));
+    if (currentIndex > 0) {
+      setSelectedQuestionId(questions[currentIndex - 1].id);
+    }
+  }, [question, questions, setSelectedQuestionId]);
 
   // Print functionality
   const handlePrint = () => {
@@ -48,6 +109,14 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
     printWindow.print();
   };
 
+  const handleImageLoad = () => {
+    setImageLoading(false);
+  };
+
+  const handleImageError = () => {
+    setImageLoading(false);
+  };
+
   if (!question) {
     return (
       <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 h-full flex items-center justify-center">
@@ -73,18 +142,6 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
   const currentIndex = questions.findIndex(q => Number(q.id) === Number(question.id));
   const totalQuestions = questions.length;
 
-  const goNext = () => {
-    if (currentIndex < totalQuestions - 1) {
-      setSelectedQuestionId(questions[currentIndex + 1].id);
-    }
-  };
-
-  const goPrevious = () => {
-    if (currentIndex > 0) {
-      setSelectedQuestionId(questions[currentIndex - 1].id);
-    }
-  };
-
   const getQuestionTypeNames = (typeNumbers) => {
     return typeNumbers.map(type => questionTypes[type] || `Type ${type}`).join(', ');
   };
@@ -98,6 +155,52 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
 
   return (
     <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 h-full flex flex-col min-h-0">
+      {/* Keyboard Shortcuts Help Modal */}
+      {showShortcutsHelp && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Keyboard Shortcuts</h3>
+              <button
+                onClick={() => setShowShortcutsHelp(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">Navigate Previous</span>
+                <kbd className="px-2 py-1 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">←</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">Navigate Next</span>
+                <kbd className="px-2 py-1 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">→</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">Toggle Question/Answer</span>
+                <kbd className="px-2 py-1 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Space</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                <span className="text-gray-600">Print Current</span>
+                <kbd className="px-2 py-1 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">Ctrl + P</kbd>
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <span className="text-gray-600">Show this help</span>
+                <kbd className="px-2 py-1 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm">?</kbd>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <p className="text-xs text-gray-500 text-center">
+                Press <kbd className="px-1 text-xs bg-gray-100 border rounded">ESC</kbd> to close
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Fixed Header - Enhanced */}
       <div className="flex-shrink-0 p-4 lg:p-6 border-b border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-t-xl">
         <div className="flex flex-col gap-4">
@@ -160,12 +263,21 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
               <button
                 onClick={handlePrint}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
-                title="Print this question"
+                title="Print this question (Ctrl+P)"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                 </svg>
                 Print
+              </button>
+              <button
+                onClick={() => setShowShortcutsHelp(true)}
+                className="px-3 py-2 text-sm font-medium text-gray-600 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow-md"
+                title="Keyboard shortcuts (?)"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
               </button>
             </div>
           </div>
@@ -197,6 +309,11 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
                 {getTopicName(question.book, question.unit, question.topic)}
               </span>
             </div>
+          </div>
+
+          {/* Keyboard Shortcuts Hint */}
+          <div className="text-xs text-gray-500 text-center">
+            <span className="font-semibold">Tip:</span> Use <kbd className="px-1 mx-1 text-xs bg-gray-100 border border-gray-300 rounded shadow-sm">←</kbd> <kbd className="px-1 mx-1 text-xs bg-gray-100 border border-gray-300 rounded shadow-sm">→</kbd> to navigate, <kbd className="px-1 mx-1 text-xs bg-gray-100 border border-gray-300 rounded shadow-sm">Space</kbd> to toggle, <kbd className="px-1 mx-1 text-xs bg-gray-100 border border-gray-300 rounded shadow-sm">?</kbd> for help
           </div>
         </div>
       </div>
@@ -239,14 +356,24 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
               className="h-full overflow-y-auto p-4 lg:p-8 bg-gradient-to-br from-white to-blue-50/30"
             >
               <div className="flex justify-center items-start min-h-full">
-                <div className="bg-white rounded-lg shadow-lg p-2 border border-gray-200">
+                <div className="bg-white rounded-lg shadow-lg p-2 border border-gray-200 relative">
+                  {/* Loading Spinner */}
+                  {imageLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 rounded-lg z-10">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                        <p className="text-gray-600 text-sm">Loading image...</p>
+                      </div>
+                    </div>
+                  )}
+                  
                   <img
                     src={showAnswer ? answerImage : questionImage}
                     alt={showAnswer ? `Answer ${question.questionNumber}` : `Question ${question.questionNumber}`}
-                    className="max-w-full h-auto rounded shadow-md"
-                    onError={(e) => {
-                      e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMjAgMTIwSDE4MFYxODBIMTIwVjEyMFoiIGZpbGw9IiNEOEU5RkYiLz4KPHBhdGggZD0iTTIyMCAxMjBIMjgwVjE4MEgyMjBWMTIwWiIgZmlsbD0iI0Q4RTlGRiIvPgo8cGF0aCBkPSJNMTIwIDIwMEgxODBWMjYwSDEyMFYyMDBaIiBmaWxsPSIjRDhFOUZGIi8+CjxwYXRoIGQ9Ik0yMjAgMjAwSDI4MFYyNjBIMjIwVjIwMFoiIGZpbGw9IiNEOEU5RkYiLz4KPHN2Zz4=";
-                    }}
+                    className="max-w-full h-auto rounded shadow-md transition-opacity duration-300"
+                    style={{ opacity: imageLoading ? 0 : 1 }}
+                    onLoad={handleImageLoad}
+                    onError={handleImageError}
                   />
                 </div>
               </div>
