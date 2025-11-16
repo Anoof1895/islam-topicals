@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
-import { topicPages, getAllTopics, searchTopics, unitNames } from "/src/topicPages";
+import { topicPages, getAllTopics, searchTopics, unitNames } from "../topicPages";
+import { topicNames } from "../topicNames";
 
 const BookViewer = () => {
   const [selectedBook, setSelectedBook] = useState(9);
@@ -8,12 +9,14 @@ const BookViewer = () => {
   const [activeTab, setActiveTab] = useState('book');
   const [notes, setNotes] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [manualPageInput, setManualPageInput] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [showImportantOnly, setShowImportantOnly] = useState(false);
   const [favoriteTopics, setFavoriteTopics] = useState(() => 
     JSON.parse(localStorage.getItem('favoriteTopics') || '[]')
   );
-  const [viewMode, setViewMode] = useState('topics'); // 'topics' or 'search'
+  const [viewMode, setViewMode] = useState('topics');
+  const [useGoogleViewer, setUseGoogleViewer] = useState(true);
   const { isDark } = useTheme();
 
   // PDF file paths
@@ -24,7 +27,7 @@ const BookViewer = () => {
   };
 
   // Load notes from localStorage
-  React.useEffect(() => {
+  useEffect(() => {
     const loadedNotes = {};
     [9, 10].forEach(book => {
       const noteKey = `book_${book}`;
@@ -43,9 +46,36 @@ const BookViewer = () => {
   }, []);
 
   // Load favorite topics
-  React.useEffect(() => {
+  useEffect(() => {
     localStorage.setItem('favoriteTopics', JSON.stringify(favoriteTopics));
   }, [favoriteTopics]);
+
+  // Keep manual input in sync with current page
+  useEffect(() => {
+    setManualPageInput(currentPage);
+  }, [currentPage]);
+
+  // Get current PDF URL for direct access
+  const getCurrentPdfUrl = () => {
+    let baseUrl = activeTab === 'summary' 
+      ? pdfFiles.summary 
+      : (selectedBook === 9 ? pdfFiles.book9 : pdfFiles.book10);
+    
+    return `${baseUrl}#page=${currentPage}`;
+  };
+
+  // Get base URL without page parameter
+  const getCurrentPdfBaseUrl = () => {
+    return activeTab === 'summary' 
+      ? pdfFiles.summary 
+      : (selectedBook === 9 ? pdfFiles.book9 : pdfFiles.book10);
+  };
+
+  // Get Google Docs viewer URL
+  const getGoogleViewerUrl = () => {
+    const baseUrl = getCurrentPdfBaseUrl();
+    return `https://docs.google.com/gview?url=${encodeURIComponent(window.location.origin + baseUrl)}&embedded=true&page=${currentPage}`;
+  };
 
   const currentNote = activeTab === 'summary' 
     ? notes['summary'] || ''
@@ -59,8 +89,24 @@ const BookViewer = () => {
     }
   };
 
+  // Handle topic click - no reload needed
   const handleTopicClick = (page) => {
     setCurrentPage(page);
+  };
+
+  // Handle manual page navigation - no reload needed
+  const handleManualPageGo = () => {
+    const page = parseInt(manualPageInput) || 1;
+    if (page > 0) {
+      setCurrentPage(page);
+    }
+  };
+
+  // Handle Enter key in manual page input
+  const handleManualPageKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleManualPageGo();
+    }
   };
 
   const toggleFavorite = (topic) => {
@@ -79,17 +125,32 @@ const BookViewer = () => {
 
   // Memoized filtered topics
   const filteredTopics = useMemo(() => {
-    const topics = topicPages[selectedBook]?.[selectedUnit] || {};
-    let result = Object.entries(topics).map(([id, topic]) => ({
-      id: parseInt(id),
-      ...topic
-    }));
+    const topics = [];
+    if (topicPages[selectedBook]?.[selectedUnit]) {
+      for (const topicId in topicPages[selectedBook][selectedUnit]) {
+        const topicData = topicPages[selectedBook][selectedUnit][topicId];
+        const topicName = topicNames[selectedBook]?.[selectedUnit]?.[topicId];
+        
+        if (topicName) {
+          topics.push({
+            id: parseInt(topicId),
+            name: topicName,
+            page: topicData.page,
+            important: topicData.important,
+            bookId: selectedBook,
+            unitId: selectedUnit
+          });
+        }
+      }
+    }
+
+    let result = topics;
 
     if (showImportantOnly) {
       result = result.filter(topic => topic.important);
     }
 
-    return result;
+    return result.sort((a, b) => a.id - b.id);
   }, [selectedBook, selectedUnit, showImportantOnly]);
 
   // Memoized search results
@@ -98,13 +159,11 @@ const BookViewer = () => {
     return searchTopics(searchQuery, selectedBook);
   }, [searchQuery, selectedBook]);
 
-  const getCurrentPdfUrl = () => {
-    let baseUrl = activeTab === 'summary' 
-      ? pdfFiles.summary 
-      : (selectedBook === 9 ? pdfFiles.book9 : pdfFiles.book10);
-    
-    return `${baseUrl}#page=${currentPage}`;
-  };
+  // Reset to page 1 when book or tab changes
+  useEffect(() => {
+    setCurrentPage(1);
+    setManualPageInput(1);
+  }, [selectedBook, activeTab]);
 
   const renderTopicNavigation = () => {
     if (viewMode === 'search') {
@@ -123,7 +182,7 @@ const BookViewer = () => {
                 onClick={() => {
                   setSelectedBook(topic.bookId);
                   setSelectedUnit(topic.unitId);
-                  setCurrentPage(topic.page);
+                  handleTopicClick(topic.page);
                   setViewMode('topics');
                 }}
                 className={`w-full text-left p-3 rounded-lg border transition-all ${
@@ -138,7 +197,9 @@ const BookViewer = () => {
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="font-medium text-sm">{topic.name}</div>
+                    <div className="font-medium text-sm">
+                      {topic.name}
+                    </div>
                     <div className={`text-xs mt-1 ${
                       currentPage === topic.page
                         ? isDark ? 'text-indigo-200' : 'text-indigo-600'
@@ -203,28 +264,15 @@ const BookViewer = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  toggleFavorite({
-                    bookId: selectedBook,
-                    unitId: selectedUnit,
-                    topicId: topic.id,
-                    ...topic
-                  });
+                  toggleFavorite(topic);
                 }}
                 className={`ml-2 p-1 rounded ${
-                  isTopicFavorite({
-                    bookId: selectedBook,
-                    unitId: selectedUnit,
-                    topicId: topic.id
-                  })
+                  isTopicFavorite(topic)
                     ? 'text-yellow-500'
                     : isDark ? 'text-gray-500' : 'text-gray-400'
                 }`}
               >
-                {isTopicFavorite({
-                  bookId: selectedBook,
-                  unitId: selectedUnit,
-                  topicId: topic.id
-                }) ? '★' : '☆'}
+                {isTopicFavorite(topic) ? '★' : '☆'}
               </button>
             </div>
           </button>
@@ -288,7 +336,6 @@ const BookViewer = () => {
                   onChange={(e) => {
                     setSelectedBook(parseInt(e.target.value));
                     setSelectedUnit(1);
-                    setCurrentPage(1);
                   }}
                   className={`p-2 rounded-lg border-2 transition-colors ${
                     isDark 
@@ -304,7 +351,6 @@ const BookViewer = () => {
                   value={selectedUnit}
                   onChange={(e) => {
                     setSelectedUnit(parseInt(e.target.value));
-                    setCurrentPage(1);
                   }}
                   className={`p-2 rounded-lg border-2 transition-colors ${
                     isDark 
@@ -318,6 +364,20 @@ const BookViewer = () => {
                     </option>
                   ))}
                 </select>
+
+                {/* Viewer Toggle */}
+                <button
+                  onClick={() => setUseGoogleViewer(!useGoogleViewer)}
+                  className={`px-4 py-2 rounded-lg border-2 ${
+                    useGoogleViewer 
+                      ? 'bg-green-600 text-white border-green-500'
+                      : isDark 
+                        ? 'bg-gray-700 border-gray-600 text-gray-300'
+                        : 'bg-gray-200 border-gray-300 text-gray-700'
+                  }`}
+                >
+                  {useGoogleViewer ? 'Google Viewer ✓' : 'Native Viewer'}
+                </button>
               </>
             )}
           </div>
@@ -431,8 +491,9 @@ const BookViewer = () => {
               <div className="flex gap-2">
                 <input
                   type="number"
-                  value={currentPage}
-                  onChange={(e) => setCurrentPage(parseInt(e.target.value) || 1)}
+                  value={manualPageInput}
+                  onChange={(e) => setManualPageInput(parseInt(e.target.value) || 1)}
+                  onKeyPress={handleManualPageKeyPress}
                   min="1"
                   className={`flex-1 p-2 rounded-lg border-2 ${
                     isDark 
@@ -442,11 +503,14 @@ const BookViewer = () => {
                   placeholder="Page number"
                 />
                 <button
-                  onClick={() => handleTopicClick(currentPage)}
+                  onClick={handleManualPageGo}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Go
                 </button>
+              </div>
+              <div className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Press Enter or click Go
               </div>
             </div>
           </div>
@@ -473,6 +537,9 @@ const BookViewer = () => {
                   isDark ? 'text-gray-400' : 'text-gray-600'
                 }`}>
                   Page: <span className="font-bold">{currentPage}</span>
+                  <span className="ml-2 text-xs">
+                    ({useGoogleViewer ? 'Google Viewer' : 'Native Viewer'})
+                  </span>
                 </div>
               )}
             </div>
@@ -483,7 +550,8 @@ const BookViewer = () => {
               }`}>
                 <div className="flex-1">
                   <iframe 
-                    src={getCurrentPdfUrl()}
+                    key={`pdf-${activeTab}-${selectedBook}-${useGoogleViewer ? 'google' : 'native'}`}
+                    src={useGoogleViewer ? getGoogleViewerUrl() : getCurrentPdfUrl()}
                     className="w-full h-full rounded-t-lg"
                     title={activeTab === 'summary' ? "Book Summary PDF" : `Book ${selectedBook} PDF`}
                     style={{ minHeight: '550px' }}
@@ -492,9 +560,15 @@ const BookViewer = () => {
                 <div className={`p-4 text-center border-t ${
                   isDark ? 'bg-gray-800 border-gray-700 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-600'
                 }`}>
-                  <p>If the PDF doesn't load,{' '}
+                  <p>
+                    {useGoogleViewer 
+                      ? 'Using Google Docs Viewer for smooth page navigation' 
+                      : 'Using native PDF viewer (may reload on page changes)'}
+                  </p>
+                  <p className="text-xs mt-1">
+                    If the PDF doesn't load,{' '}
                     <a 
-                      href={activeTab === 'summary' ? pdfFiles.summary : (selectedBook === 9 ? pdfFiles.book9 : pdfFiles.book10)} 
+                      href={getCurrentPdfBaseUrl()} 
                       download 
                       className="text-blue-500 hover:underline"
                     >
