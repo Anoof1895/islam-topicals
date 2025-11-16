@@ -1,7 +1,11 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { Document, Page, pdfjs } from 'react-pdf';
 import { useTheme } from "../context/ThemeContext";
 import { topicPages, getAllTopics, searchTopics, unitNames } from "../topicPages";
 import { topicNames } from "../topicNames";
+
+// Configure PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const BookViewer = () => {
   const [selectedBook, setSelectedBook] = useState(9);
@@ -16,15 +20,22 @@ const BookViewer = () => {
     JSON.parse(localStorage.getItem('favoriteTopics') || '[]')
   );
   const [viewMode, setViewMode] = useState('topics');
-  const [pdfViewerType, setPdfViewerType] = useState('native'); // 'native', 'google', or 'mozilla'
+  const [numPages, setNumPages] = useState(null);
+  const [pdfError, setPdfError] = useState(null);
   const { isDark } = useTheme();
-  const iframeRef = useRef(null);
 
   // PDF file paths
   const pdfFiles = {
     book9: "/pdfs/book9.pdf",
     book10: "/pdfs/book10.pdf", 
     summary: "/pdfs/summary.pdf"
+  };
+
+  // Get current PDF URL
+  const getCurrentPdfUrl = () => {
+    return activeTab === 'summary' 
+      ? pdfFiles.summary 
+      : (selectedBook === 9 ? pdfFiles.book9 : pdfFiles.book10);
   };
 
   // Load notes from localStorage
@@ -56,37 +67,6 @@ const BookViewer = () => {
     setManualPageInput(currentPage);
   }, [currentPage]);
 
-  // Get current PDF URL for native viewer - WITHOUT page parameter in key
-  const getCurrentPdfUrl = () => {
-    let baseUrl = activeTab === 'summary' 
-      ? pdfFiles.summary 
-      : (selectedBook === 9 ? pdfFiles.book9 : pdfFiles.book10);
-    
-    return `${baseUrl}#page=${currentPage}`;
-  };
-
-  // Get base URL without page parameter
-  const getCurrentPdfBaseUrl = () => {
-    return activeTab === 'summary' 
-      ? pdfFiles.summary 
-      : (selectedBook === 9 ? pdfFiles.book9 : pdfFiles.book10);
-  };
-
-  // Get Google Docs viewer URL
-  const getGoogleViewerUrl = () => {
-    const baseUrl = getCurrentPdfBaseUrl();
-    const fullUrl = window.location.origin + baseUrl;
-    return `https://docs.google.com/gview?url=${encodeURIComponent(fullUrl)}&embedded=true&page=${currentPage}`;
-  };
-
-  // Get Mozilla PDF.js viewer URL
-  const getMozillaViewerUrl = () => {
-    const baseUrl = getCurrentPdfBaseUrl();
-    const fullUrl = window.location.origin + baseUrl;
-    // Using a CORS-enabled PDF.js viewer
-    return `https://pdfjs.akashojha.com/viewer.html?file=${encodeURIComponent(fullUrl)}#page=${currentPage}`;
-  };
-
   const currentNote = activeTab === 'summary' 
     ? notes['summary'] || ''
     : notes[`book_${selectedBook}`] || '';
@@ -99,35 +79,16 @@ const BookViewer = () => {
     }
   };
 
-  // Handle topic click - try to navigate without reload
+  // Handle topic click - no reload needed!
   const handleTopicClick = (page) => {
     setCurrentPage(page);
-    
-    // Try to update iframe without full reload for supported viewers
-    if (pdfViewerType === 'google' || pdfViewerType === 'mozilla') {
-      // These viewers support page changes without reload
-      setTimeout(() => {
-        if (iframeRef.current) {
-          iframeRef.current.src = getPdfViewerUrl();
-        }
-      }, 100);
-    }
-    // For native viewer, we rely on the hash change
   };
 
   // Handle manual page navigation
   const handleManualPageGo = () => {
     const page = parseInt(manualPageInput) || 1;
-    if (page > 0) {
+    if (page > 0 && page <= numPages) {
       setCurrentPage(page);
-      
-      if (pdfViewerType === 'google' || pdfViewerType === 'mozilla') {
-        setTimeout(() => {
-          if (iframeRef.current) {
-            iframeRef.current.src = getPdfViewerUrl();
-          }
-        }, 100);
-      }
     }
   };
 
@@ -136,6 +97,18 @@ const BookViewer = () => {
     if (e.key === 'Enter') {
       handleManualPageGo();
     }
+  };
+
+  // PDF load success handler
+  const onDocumentLoadSuccess = ({ numPages }) => {
+    setNumPages(numPages);
+    setPdfError(null);
+  };
+
+  // PDF load error handler
+  const onDocumentLoadError = (error) => {
+    console.error('PDF loading error:', error);
+    setPdfError('Failed to load PDF. Please check if the file exists.');
   };
 
   const toggleFavorite = (topic) => {
@@ -188,24 +161,12 @@ const BookViewer = () => {
     return searchTopics(searchQuery, selectedBook);
   }, [searchQuery, selectedBook]);
 
-  // Get the current PDF viewer URL based on selected type
-  const getPdfViewerUrl = () => {
-    switch(pdfViewerType) {
-      case 'google':
-        return getGoogleViewerUrl();
-      case 'mozilla':
-        return getMozillaViewerUrl();
-      case 'native':
-      default:
-        return getCurrentPdfUrl();
-    }
-  };
-
-  // Reset to page 1 when book, tab, or viewer type changes
+  // Reset to page 1 when book or tab changes
   useEffect(() => {
     setCurrentPage(1);
     setManualPageInput(1);
-  }, [selectedBook, activeTab, pdfViewerType]);
+    setPdfError(null);
+  }, [selectedBook, activeTab]);
 
   const renderTopicNavigation = () => {
     if (viewMode === 'search') {
@@ -336,7 +297,7 @@ const BookViewer = () => {
             }`}>Textbook Viewer</h2>
             <p className={`text-sm mt-1 ${
               isDark ? 'text-gray-400' : 'text-gray-600'
-            }`}>Advanced PDF navigation with topic shortcuts</p>
+            }`}>Smooth PDF navigation with embedded PDF.js</p>
           </div>
           
           <div className="flex flex-wrap gap-3">
@@ -405,21 +366,6 @@ const BookViewer = () => {
                       Unit {unit}: {unitNames[unit]}
                     </option>
                   ))}
-                </select>
-
-                {/* Viewer Type Selector */}
-                <select
-                  value={pdfViewerType}
-                  onChange={(e) => setPdfViewerType(e.target.value)}
-                  className={`p-2 rounded-lg border-2 transition-colors ${
-                    isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                >
-                  <option value="native">Native Viewer</option>
-                  <option value="google">Google Viewer</option>
-                  <option value="mozilla">Mozilla Viewer</option>
                 </select>
               </>
             )}
@@ -538,6 +484,7 @@ const BookViewer = () => {
                   onChange={(e) => setManualPageInput(parseInt(e.target.value) || 1)}
                   onKeyPress={handleManualPageKeyPress}
                   min="1"
+                  max={numPages}
                   className={`flex-1 p-2 rounded-lg border-2 ${
                     isDark 
                       ? 'bg-gray-700 border-gray-600 text-white' 
@@ -553,7 +500,7 @@ const BookViewer = () => {
                 </button>
               </div>
               <div className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                Press Enter or click Go
+                Press Enter or click Go • {numPages ? `${numPages} pages total` : 'Loading...'}
               </div>
             </div>
           </div>
@@ -579,10 +526,7 @@ const BookViewer = () => {
                 <div className={`text-sm ${
                   isDark ? 'text-gray-400' : 'text-gray-600'
                 }`}>
-                  Page: <span className="font-bold">{currentPage}</span>
-                  <span className="ml-2 text-xs">
-                    ({pdfViewerType === 'google' ? 'Google Viewer' : pdfViewerType === 'mozilla' ? 'Mozilla Viewer' : 'Native Viewer'})
-                  </span>
+                  Page: <span className="font-bold">{currentPage}</span> / {numPages || '?'}
                 </div>
               )}
             </div>
@@ -591,55 +535,93 @@ const BookViewer = () => {
               <div className={`rounded-lg border-2 w-full h-full min-h-[600px] flex flex-col ${
                 isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
               }`}>
-                <div className="flex-1">
-                  <iframe 
-                    ref={iframeRef}
-                    key={`pdf-${activeTab}-${selectedBook}-${pdfViewerType}`} // Remove currentPage from key to prevent reloads
-                    src={getPdfViewerUrl()}
-                    className="w-full h-full rounded-t-lg"
-                    title={activeTab === 'summary' ? "Book Summary PDF" : `Book ${selectedBook} PDF`}
-                    style={{ minHeight: '550px' }}
-                  />
-                </div>
-                <div className={`p-4 text-center border-t ${
-                  isDark ? 'bg-gray-800 border-gray-700 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-600'
-                }`}>
-                  {pdfViewerType === 'google' ? (
-                    <>
-                      <p className="text-green-600 dark:text-green-400">
-                        ✅ Google Viewer - Smooth page navigation
-                      </p>
-                      <p className="text-sm mt-1">
-                        Page changes should work without full reloads
-                      </p>
-                    </>
-                  ) : pdfViewerType === 'mozilla' ? (
-                    <>
-                      <p className="text-green-600 dark:text-green-400">
-                        ✅ Mozilla Viewer - Best for large files
-                      </p>
-                      <p className="text-sm mt-1">
-                        Handles large PDFs with smooth navigation
-                      </p>
-                    </>
+                <div className="flex-1 flex items-center justify-center overflow-auto p-4">
+                  {pdfError ? (
+                    <div className={`text-center p-8 ${
+                      isDark ? 'text-red-400' : 'text-red-600'
+                    }`}>
+                      <div className="text-4xl mb-4">⚠️</div>
+                      <h3 className="text-xl font-bold mb-2">PDF Loading Error</h3>
+                      <p className="mb-4">{pdfError}</p>
+                      <a 
+                        href={getCurrentPdfUrl()} 
+                        download 
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Download PDF Instead
+                      </a>
+                    </div>
                   ) : (
-                    <>
-                      <p>Using native browser PDF viewer</p>
-                      <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
-                        Page changes may cause brief reloads
-                      </p>
-                    </>
-                  )}
-                  <p className="text-xs mt-2">
-                    If the PDF doesn't load,{' '}
-                    <a 
-                      href={getCurrentPdfBaseUrl()} 
-                      download 
-                      className="text-blue-500 hover:underline"
+                    <Document
+                      file={getCurrentPdfUrl()}
+                      onLoadSuccess={onDocumentLoadSuccess}
+                      onLoadError={onDocumentLoadError}
+                      loading={
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                          <p className={`mt-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                            Loading PDF...
+                          </p>
+                        </div>
+                      }
                     >
-                      click here to download
-                    </a>
-                  </p>
+                      <Page 
+                        pageNumber={currentPage} 
+                        loading={
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                            <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                              Loading page {currentPage}...
+                            </p>
+                          </div>
+                        }
+                      />
+                    </Document>
+                  )}
+                </div>
+                
+                {/* Page Navigation Controls */}
+                <div className={`p-4 border-t flex justify-between items-center ${
+                  isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
+                }`}>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage <= 1}
+                      className={`px-4 py-2 rounded-lg transition-colors ${
+                        currentPage <= 1
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(numPages || prev, prev + 1))}
+                      disabled={currentPage >= (numPages || 1)}
+                      className={`px-4 py-2 rounded-lg transition-colors ${
+                        currentPage >= (numPages || 1)
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                  
+                  <div className={`text-sm ${
+                    isDark ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    Using embedded PDF.js • Smooth navigation
+                  </div>
+                  
+                  <a 
+                    href={getCurrentPdfUrl()} 
+                    download 
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Download PDF
+                  </a>
                 </div>
               </div>
             </div>
