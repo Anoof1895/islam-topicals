@@ -16,10 +16,10 @@ const BookViewer = () => {
     JSON.parse(localStorage.getItem('favoriteTopics') || '[]')
   );
   const [viewMode, setViewMode] = useState('topics');
-  const [useGoogleViewer, setUseGoogleViewer] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const { isDark } = useTheme();
 
-  // PDF file paths
+  // PDF file paths - make sure these are correct and PDFs exist
   const pdfFiles = {
     book9: "/pdfs/book9.pdf",
     book10: "/pdfs/book10.pdf", 
@@ -55,26 +55,23 @@ const BookViewer = () => {
     setManualPageInput(currentPage);
   }, [currentPage]);
 
-  // Get current PDF URL for direct access
+  // Get current PDF URL
   const getCurrentPdfUrl = () => {
     let baseUrl = activeTab === 'summary' 
       ? pdfFiles.summary 
       : (selectedBook === 9 ? pdfFiles.book9 : pdfFiles.book10);
     
-    return `${baseUrl}#page=${currentPage}`;
+    // Different browsers support different PDF page navigation methods
+    // Try the most common ones
+    const url = `${baseUrl}#page=${currentPage}`;
+    return url;
   };
 
-  // Get base URL without page parameter
+  // Get base URL without page parameter for downloads
   const getCurrentPdfBaseUrl = () => {
     return activeTab === 'summary' 
       ? pdfFiles.summary 
       : (selectedBook === 9 ? pdfFiles.book9 : pdfFiles.book10);
-  };
-
-  // Get Google Docs viewer URL
-  const getGoogleViewerUrl = () => {
-    const baseUrl = getCurrentPdfBaseUrl();
-    return `https://docs.google.com/gview?url=${encodeURIComponent(window.location.origin + baseUrl)}&embedded=true&page=${currentPage}`;
   };
 
   const currentNote = activeTab === 'summary' 
@@ -89,16 +86,21 @@ const BookViewer = () => {
     }
   };
 
-  // Handle topic click - no reload needed
+  // Handle topic click with loading state
   const handleTopicClick = (page) => {
+    setIsLoading(true);
     setCurrentPage(page);
+    // Reset loading after a short delay
+    setTimeout(() => setIsLoading(false), 500);
   };
 
-  // Handle manual page navigation - no reload needed
+  // Handle manual page navigation
   const handleManualPageGo = () => {
     const page = parseInt(manualPageInput) || 1;
     if (page > 0) {
+      setIsLoading(true);
       setCurrentPage(page);
+      setTimeout(() => setIsLoading(false), 500);
     }
   };
 
@@ -163,6 +165,8 @@ const BookViewer = () => {
   useEffect(() => {
     setCurrentPage(1);
     setManualPageInput(1);
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 1000);
   }, [selectedBook, activeTab]);
 
   const renderTopicNavigation = () => {
@@ -364,20 +368,6 @@ const BookViewer = () => {
                     </option>
                   ))}
                 </select>
-
-                {/* Viewer Toggle */}
-                <button
-                  onClick={() => setUseGoogleViewer(!useGoogleViewer)}
-                  className={`px-4 py-2 rounded-lg border-2 ${
-                    useGoogleViewer 
-                      ? 'bg-green-600 text-white border-green-500'
-                      : isDark 
-                        ? 'bg-gray-700 border-gray-600 text-gray-300'
-                        : 'bg-gray-200 border-gray-300 text-gray-700'
-                  }`}
-                >
-                  {useGoogleViewer ? 'Google Viewer ✓' : 'Native Viewer'}
-                </button>
               </>
             )}
           </div>
@@ -537,9 +527,9 @@ const BookViewer = () => {
                   isDark ? 'text-gray-400' : 'text-gray-600'
                 }`}>
                   Page: <span className="font-bold">{currentPage}</span>
-                  <span className="ml-2 text-xs">
-                    ({useGoogleViewer ? 'Google Viewer' : 'Native Viewer'})
-                  </span>
+                  {isLoading && (
+                    <span className="ml-2 text-yellow-500">⏳ Loading...</span>
+                  )}
                 </div>
               )}
             </div>
@@ -548,22 +538,37 @@ const BookViewer = () => {
               <div className={`rounded-lg border-2 w-full h-full min-h-[600px] flex flex-col ${
                 isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
               }`}>
-                <div className="flex-1">
+                <div className="flex-1 relative">
+                  {isLoading && (
+                    <div className={`absolute inset-0 flex items-center justify-center z-10 ${
+                      isDark ? 'bg-gray-800' : 'bg-white'
+                    }`}>
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                        <p className={`mt-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                          Loading PDF...
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   <iframe 
-                    key={`pdf-${activeTab}-${selectedBook}-${useGoogleViewer ? 'google' : 'native'}`}
-                    src={useGoogleViewer ? getGoogleViewerUrl() : getCurrentPdfUrl()}
+                    key={`pdf-${activeTab}-${selectedBook}-${currentPage}`}
+                    src={getCurrentPdfUrl()}
                     className="w-full h-full rounded-t-lg"
                     title={activeTab === 'summary' ? "Book Summary PDF" : `Book ${selectedBook} PDF`}
                     style={{ minHeight: '550px' }}
+                    onLoad={() => setIsLoading(false)}
+                    onError={() => {
+                      setIsLoading(false);
+                      console.error("Failed to load PDF");
+                    }}
                   />
                 </div>
                 <div className={`p-4 text-center border-t ${
                   isDark ? 'bg-gray-800 border-gray-700 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-600'
                 }`}>
                   <p>
-                    {useGoogleViewer 
-                      ? 'Using Google Docs Viewer for smooth page navigation' 
-                      : 'Using native PDF viewer (may reload on page changes)'}
+                    Using browser PDF viewer with page navigation
                   </p>
                   <p className="text-xs mt-1">
                     If the PDF doesn't load,{' '}
@@ -574,6 +579,9 @@ const BookViewer = () => {
                     >
                       click here to download
                     </a>
+                  </p>
+                  <p className="text-xs mt-1">
+                    Current PDF: {activeTab === 'summary' ? 'Summary' : `Book ${selectedBook}`}
                   </p>
                 </div>
               </div>
