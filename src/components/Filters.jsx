@@ -143,13 +143,25 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
       return getPaperTypeOptions();
     }
 
+    // For types field, use custom ordering for filter display
+    if (field === 'types') {
+      // Custom order for filter dropdown: Thaaraf, Dheyha, Mauloomaathu, Beynun Kurun, Haadhisaa, Dhiraasaa, Gina Marks
+      const customOrder = [1, 2, 5, 7, 3, 6, 4];
+      
+      // Filter to only include types that exist in available values, then sort by custom order
+      return customOrder
+        .filter(typeId => values.includes(typeId))
+        .map(typeId => ({
+          value: typeId,
+          label: questionTypes[typeId] || `Type ${typeId}`
+        }));
+    }
+
     return values.map(value => {
       let label = value;
       
       if (field === 'unit' && unitNames && unitNames[value]) {
         label = `Unit ${value}: ${unitNames[value]}`;
-      } else if (field === 'types' && questionTypes && questionTypes[value]) {
-        label = questionTypes[value];
       } else if (field === 'paper') {
         label = `Paper ${value}`;
       } else if (field === 'book') {
@@ -171,7 +183,7 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
     paperType: 'Paper Type',
     unit: 'Unit',
     topic: 'Topic',
-    types: 'Type'
+    types: 'Question Type'
   };
 
   // Define the order of filters

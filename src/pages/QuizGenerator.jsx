@@ -30,6 +30,23 @@ const QuizGenerator = ({ allQuestions, unitNames, questionTypes, setSelectedQues
     return units.sort((a, b) => a - b);
   }, []);
 
+  // Get available question types with custom ordering
+  const availableQuestionTypes = useMemo(() => {
+    // Custom order for question types: Thaaraf, Dheyha, Mauloomaathu, Beynun Kurun, Haadhisaa, Dhiraasaa, Gina Marks
+    const customOrder = [1, 2, 5, 7, 3, 6, 4];
+    
+    // Get all unique question types from all questions
+    const allTypes = [...new Set(allQuestions.flatMap(q => q.types))].sort((a, b) => a - b);
+    
+    // Filter and sort by custom order
+    return customOrder
+      .filter(typeId => allTypes.includes(typeId))
+      .map(typeId => ({
+        value: typeId,
+        label: questionTypes[typeId] || `Type ${typeId}`
+      }));
+  }, [allQuestions, questionTypes]);
+
   // Function to extract base question number (removes trailing letters like 'a', 'b')
   const getBaseQuestionNumber = (questionNumber) => {
     // Remove any trailing letters from question number (e.g., "18a" -> "18", "15b" -> "15")
@@ -78,7 +95,16 @@ const QuizGenerator = ({ allQuestions, unitNames, questionTypes, setSelectedQues
     let filteredQuestions = allQuestions.filter(q => {
       if (quizConfig.book.length > 0 && !quizConfig.book.includes(q.book)) return false;
       if (quizConfig.units.length > 0 && !quizConfig.units.includes(q.unit)) return false;
-      if (quizConfig.types.length > 0 && !q.types.some(t => quizConfig.types.includes(t))) return false;
+      
+      // CHANGE: Use AND logic instead of OR logic for question types
+      if (quizConfig.types.length > 0) {
+        // A question must have ALL selected types, not just any of them
+        const hasAllSelectedTypes = quizConfig.types.every(selectedType => 
+          q.types.includes(selectedType)
+        );
+        if (!hasAllSelectedTypes) return false;
+      }
+      
       if (!quizConfig.includeSpecimen) {
         const isSpecimen = (q.year === 2021 && q.paperSet === 2) || (q.year === 2020 && q.paperSet === 1);
         if (isSpecimen) return false;
@@ -638,6 +664,39 @@ const QuizGenerator = ({ allQuestions, unitNames, questionTypes, setSelectedQues
             isDark ? 'text-gray-500' : 'text-gray-500'
           }`}>
             Hold Ctrl/Cmd to select multiple units
+          </p>
+        </div>
+
+        {/* Question Type Selection */}
+        <div>
+          <label className={`block text-sm font-semibold mb-2 ${
+            isDark ? 'text-gray-300' : 'text-gray-800'
+          }`}>
+            Question Types
+          </label>
+          <select
+            multiple
+            value={quizConfig.types}
+            onChange={(e) => {
+              const selectedTypes = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+              handleConfigChange('types', selectedTypes);
+            }}
+            className={`w-full p-3 rounded-lg border-2 transition-colors h-32 min-h-[44px] ${
+              isDark 
+                ? 'bg-gray-700 border-gray-600 text-white' 
+                : 'bg-white border-gray-300 text-gray-900'
+            }`}
+          >
+            {availableQuestionTypes.map(type => (
+              <option key={type.value} value={type.value}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+          <p className={`text-xs mt-1 ${
+            isDark ? 'text-gray-500' : 'text-gray-500'
+          }`}>
+            Hold Ctrl/Cmd to select multiple types
           </p>
         </div>
 

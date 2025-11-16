@@ -5,6 +5,7 @@ import QuestionList from "./components/QuestionList";
 import QuestionView from "./pages/QuestionView";
 import UnseenTopics from "./pages/UnseenTopics";
 import QuizGenerator from "./pages/QuizGenerator";
+import BookViewer from "./pages/BookViewer";
 import { topicNames, getTopicName } from "./topicNames";
 import { useTheme } from "./context/ThemeContext";
 
@@ -14,7 +15,7 @@ const App = () => {
   const [favorites, setFavorites] = useState(() => 
     JSON.parse(localStorage.getItem('favoriteQuestions') || '[]')
   );
-  const [currentView, setCurrentView] = useState('main'); // 'main', 'unseen-topics', 'quiz'
+  const [currentView, setCurrentView] = useState('main');
   const { isDark, toggleTheme } = useTheme();
 
   // Unit name mapping
@@ -23,7 +24,7 @@ const App = () => {
     2: "Khadhees", 
     3: "Fiqh",
     4: "Thaareekh",
-    5: "Saqaafa",
+    5: "Sqaafa",
     6: "Akhlaaq"
   };
 
@@ -34,7 +35,8 @@ const App = () => {
     3: "Haadhisaa", 
     4: "Gina Marks",
     5: "Mauloomaathu",
-    6: "Dhiraasaa"
+    6: "Dhiraasaa",
+    7: "Beynun Kurun"
   };
 
   // Toggle favorite function
@@ -64,7 +66,7 @@ const App = () => {
         if (values.length === 0) return true;
         
         if (field === 'types') {
-          return values.some(selectedType => q.types.includes(selectedType));
+          return values.every(selectedType => q.types.includes(selectedType));
         }
         
         if (field === 'topic') {
@@ -121,7 +123,7 @@ const App = () => {
       />
       
       <div className="flex flex-col lg:flex-row gap-3 lg:gap-6 mt-3 lg:mt-6 flex-1 min-h-0">
-        <div className="w-full lg:w-96 flex-shrink-0 flex flex-col min-h-0">
+        <div className="w-full lg:w-96 xl:w-80 2xl:w-96 flex-shrink-0 flex flex-col min-h-0">
           <QuestionList
             questions={filteredQuestions}
             selectedQuestionId={selectedQuestionId}
@@ -161,6 +163,8 @@ const App = () => {
         />;
       case 'unseen-topics':
         return <UnseenTopics allQuestions={allQuestions} unitNames={unitNames} />;
+      case 'books':
+        return <BookViewer unitNames={unitNames} />;
       default:
         return renderMainView();
     }
@@ -172,7 +176,6 @@ const App = () => {
         ? 'bg-gradient-to-br from-gray-900 to-gray-800 text-white' 
         : 'bg-gradient-to-br from-slate-50 to-blue-50/30 text-gray-900'
     }`}>
-      {/* Header - Updated with theme toggle and quiz navigation */}
       <header className={`border-b shadow-sm transition-colors duration-300 ${
         isDark 
           ? 'bg-gray-800 border-gray-700' 
@@ -190,7 +193,6 @@ const App = () => {
                 </p>
               </div>
               
-              {/* Navigation Tabs */}
               <div className={`flex rounded-lg p-1 ${
                 isDark ? 'bg-gray-700' : 'bg-gray-100'
               }`}>
@@ -221,6 +223,20 @@ const App = () => {
                   }`}
                 >
                   🎯 Quiz
+                </button>
+                <button
+                  onClick={() => setCurrentView('books')}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    currentView === 'books'
+                      ? isDark
+                        ? "bg-gray-600 text-white shadow-sm"
+                        : "bg-white text-purple-600 shadow-sm"
+                      : isDark
+                        ? "text-gray-400 hover:text-gray-200"
+                        : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  📖 Books
                 </button>
                 <button
                   onClick={() => setCurrentView('unseen-topics')}
@@ -260,6 +276,12 @@ const App = () => {
                   }`}>
                     Practice Mode
                   </div>
+                ) : currentView === 'books' ? (
+                  <div className={`font-semibold text-sm ${
+                    isDark ? 'text-purple-400' : 'text-purple-600'
+                  }`}>
+                    Textbook Viewer
+                  </div>
                 ) : (
                   <div className={`font-semibold text-sm ${
                     isDark ? 'text-orange-400' : 'text-orange-600'
@@ -269,7 +291,6 @@ const App = () => {
                 )}
               </div>
 
-              {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
                 className={`p-2 rounded-lg transition-all duration-300 ${
@@ -286,12 +307,10 @@ const App = () => {
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="flex-1 p-3 lg:p-6 flex flex-col min-h-0">
         {renderCurrentView()}
       </div>
 
-      {/* Footer */}
       <footer className={`border-t py-4 mt-8 transition-colors duration-300 ${
         isDark 
           ? 'bg-gray-800 border-gray-700' 

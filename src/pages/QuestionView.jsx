@@ -189,7 +189,15 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
   const totalQuestions = questions.length;
 
   const getQuestionTypeNames = (typeNumbers) => {
-    return typeNumbers.map(type => questionTypes[type] || `Type ${type}`).join(', ');
+    // Same order as filters: Thaaraf, Dheyha, Mauloomaathu, Beynun Kurun, Haadhisaa, Dhiraasaa, Gina Marks
+    const displayOrder = [1, 2, 5, 7, 3, 6, 4];
+    
+    // Create a copy and sort by the displayOrder
+    const sortedTypes = [...typeNumbers].sort((a, b) => 
+      displayOrder.indexOf(a) - displayOrder.indexOf(b)
+    );
+    
+    return sortedTypes.map(type => questionTypes[type] || `Type ${type}`).join(', ');
   };
 
   const getUnitName = (unitNumber) => {
