@@ -1,52 +1,54 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
-import { Document, Page, pdfjs } from 'react-pdf';
+import React, { useState, useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
-import { topicPages, getAllTopics, searchTopics, unitNames } from "../topicPages";
-import { topicNames } from "../topicNames";
-
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const BookViewer = () => {
-  const [selectedBook, setSelectedBook] = useState(9);
-  const [selectedUnit, setSelectedUnit] = useState(1);
+  const [selectedGrade, setSelectedGrade] = useState(9);
+  const [selectedBookType, setSelectedBookType] = useState('SB'); // 'SB' or 'TG'
   const [activeTab, setActiveTab] = useState('book');
   const [notes, setNotes] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
-  const [manualPageInput, setManualPageInput] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showImportantOnly, setShowImportantOnly] = useState(false);
-  const [favoriteTopics, setFavoriteTopics] = useState(() => 
-    JSON.parse(localStorage.getItem('favoriteTopics') || '[]')
-  );
-  const [viewMode, setViewMode] = useState('topics');
-  const [numPages, setNumPages] = useState(null);
-  const [pdfError, setPdfError] = useState(null);
+  
   const { isDark } = useTheme();
 
   // PDF file paths
   const pdfFiles = {
-    book9: "/pdfs/book9.pdf",
-    book10: "/pdfs/book10.pdf", 
-    summary: "/pdfs/summary.pdf"
+    grade9SB: "/pdfs/Grade 9 SB.pdf",
+    grade9TG: "/pdfs/Grade 9 TG.pdf",
+    grade10SB: "/pdfs/Grade 10 SB.pdf",
+    grade10TG: "/pdfs/Grade 10 TG.pdf", 
+    summary: "/pdfs/Summary.pdf"
   };
 
   // Get current PDF URL
   const getCurrentPdfUrl = () => {
-    return activeTab === 'summary' 
-      ? pdfFiles.summary 
-      : (selectedBook === 9 ? pdfFiles.book9 : pdfFiles.book10);
+    if (activeTab === 'summary') {
+      return pdfFiles.summary;
+    }
+    
+    const bookKey = `grade${selectedGrade}${selectedBookType}`;
+    return pdfFiles[bookKey];
+  };
+
+  // Get current book display name
+  const getCurrentBookName = () => {
+    if (activeTab === 'summary') {
+      return 'Book Summary';
+    }
+    return `Grade ${selectedGrade} ${selectedBookType === 'SB' ? 'Student Book' : 'Teacher Guide'}`;
   };
 
   // Load notes from localStorage
   useEffect(() => {
     const loadedNotes = {};
-    [9, 10].forEach(book => {
-      const noteKey = `book_${book}`;
-      const note = localStorage.getItem(`book_notes_${noteKey}`);
-      if (note) {
-        loadedNotes[noteKey] = note;
-      }
+    
+    // Load notes for all combinations
+    [9, 10].forEach(grade => {
+      ['SB', 'TG'].forEach(bookType => {
+        const noteKey = `grade_${grade}_${bookType}`;
+        const note = localStorage.getItem(`book_notes_${noteKey}`);
+        if (note) {
+          loadedNotes[noteKey] = note;
+        }
+      });
     });
     
     const summaryNote = localStorage.getItem(`book_notes_summary`);
@@ -57,231 +59,24 @@ const BookViewer = () => {
     setNotes(loadedNotes);
   }, []);
 
-  // Load favorite topics
-  useEffect(() => {
-    localStorage.setItem('favoriteTopics', JSON.stringify(favoriteTopics));
-  }, [favoriteTopics]);
+  const getCurrentNoteKey = () => {
+    if (activeTab === 'summary') {
+      return 'summary';
+    }
+    return `grade_${selectedGrade}_${selectedBookType}`;
+  };
 
-  // Keep manual input in sync with current page
-  useEffect(() => {
-    setManualPageInput(currentPage);
-  }, [currentPage]);
-
-  const currentNote = activeTab === 'summary' 
-    ? notes['summary'] || ''
-    : notes[`book_${selectedBook}`] || '';
+  const currentNote = notes[getCurrentNoteKey()] || '';
 
   const handleNoteSave = () => {
-    if (activeTab === 'summary') {
-      localStorage.setItem(`book_notes_summary`, currentNote);
-    } else {
-      localStorage.setItem(`book_notes_book_${selectedBook}`, currentNote);
-    }
+    const noteKey = getCurrentNoteKey();
+    localStorage.setItem(`book_notes_${noteKey}`, currentNote);
+    alert('Notes saved!');
   };
 
-  // Handle topic click - no reload needed!
-  const handleTopicClick = (page) => {
-    setCurrentPage(page);
-  };
-
-  // Handle manual page navigation
-  const handleManualPageGo = () => {
-    const page = parseInt(manualPageInput) || 1;
-    if (page > 0 && page <= numPages) {
-      setCurrentPage(page);
-    }
-  };
-
-  // Handle Enter key in manual page input
-  const handleManualPageKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleManualPageGo();
-    }
-  };
-
-  // PDF load success handler
-  const onDocumentLoadSuccess = ({ numPages }) => {
-    setNumPages(numPages);
-    setPdfError(null);
-  };
-
-  // PDF load error handler
-  const onDocumentLoadError = (error) => {
-    console.error('PDF loading error:', error);
-    setPdfError('Failed to load PDF. Please check if the file exists.');
-  };
-
-  const toggleFavorite = (topic) => {
-    const topicKey = `${topic.bookId}-${topic.unitId}-${topic.topicId}`;
-    if (favoriteTopics.includes(topicKey)) {
-      setFavoriteTopics(prev => prev.filter(t => t !== topicKey));
-    } else {
-      setFavoriteTopics(prev => [...prev, topicKey]);
-    }
-  };
-
-  const isTopicFavorite = (topic) => {
-    const topicKey = `${topic.bookId}-${topic.unitId}-${topic.topicId}`;
-    return favoriteTopics.includes(topicKey);
-  };
-
-  // Memoized filtered topics
-  const filteredTopics = useMemo(() => {
-    const topics = [];
-    if (topicPages[selectedBook]?.[selectedUnit]) {
-      for (const topicId in topicPages[selectedBook][selectedUnit]) {
-        const topicData = topicPages[selectedBook][selectedUnit][topicId];
-        const topicName = topicNames[selectedBook]?.[selectedUnit]?.[topicId];
-        
-        if (topicName) {
-          topics.push({
-            id: parseInt(topicId),
-            name: topicName,
-            page: topicData.page,
-            important: topicData.important,
-            bookId: selectedBook,
-            unitId: selectedUnit
-          });
-        }
-      }
-    }
-
-    let result = topics;
-
-    if (showImportantOnly) {
-      result = result.filter(topic => topic.important);
-    }
-
-    return result.sort((a, b) => a.id - b.id);
-  }, [selectedBook, selectedUnit, showImportantOnly]);
-
-  // Memoized search results
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    return searchTopics(searchQuery, selectedBook);
-  }, [searchQuery, selectedBook]);
-
-  // Reset to page 1 when book or tab changes
-  useEffect(() => {
-    setCurrentPage(1);
-    setManualPageInput(1);
-    setPdfError(null);
-  }, [selectedBook, activeTab]);
-
-  const renderTopicNavigation = () => {
-    if (viewMode === 'search') {
-      return (
-        <div className="space-y-2 max-h-96 overflow-y-auto">
-          {searchResults.length === 0 ? (
-            <div className={`text-center p-4 ${
-              isDark ? 'text-gray-400' : 'text-gray-500'
-            }`}>
-              No topics found for "{searchQuery}"
-            </div>
-          ) : (
-            searchResults.map((topic) => (
-              <button
-                key={`${topic.bookId}-${topic.unitId}-${topic.topicId}`}
-                onClick={() => {
-                  setSelectedBook(topic.bookId);
-                  setSelectedUnit(topic.unitId);
-                  handleTopicClick(topic.page);
-                  setViewMode('topics');
-                }}
-                className={`w-full text-left p-3 rounded-lg border transition-all ${
-                  currentPage === topic.page && selectedBook === topic.bookId && selectedUnit === topic.unitId
-                    ? isDark 
-                      ? 'bg-indigo-600 border-indigo-500 text-white' 
-                      : 'bg-indigo-100 border-indigo-300 text-indigo-800'
-                    : isDark
-                      ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
-                      : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">
-                      {topic.name}
-                    </div>
-                    <div className={`text-xs mt-1 ${
-                      currentPage === topic.page
-                        ? isDark ? 'text-indigo-200' : 'text-indigo-600'
-                        : isDark ? 'text-gray-400' : 'text-gray-500'
-                    }`}>
-                      Book {topic.bookId}, Unit {topic.unitId} • Page {topic.page}
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite(topic);
-                    }}
-                    className={`ml-2 p-1 rounded ${
-                      isTopicFavorite(topic)
-                        ? 'text-yellow-500'
-                        : isDark ? 'text-gray-500' : 'text-gray-400'
-                    }`}
-                  >
-                    {isTopicFavorite(topic) ? '★' : '☆'}
-                  </button>
-                </div>
-              </button>
-            ))
-          )}
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-2 max-h-96 overflow-y-auto">
-        {filteredTopics.map((topic) => (
-          <button
-            key={topic.id}
-            onClick={() => handleTopicClick(topic.page)}
-            className={`w-full text-left p-3 rounded-lg border transition-all ${
-              currentPage === topic.page
-                ? isDark 
-                  ? 'bg-indigo-600 border-indigo-500 text-white' 
-                  : 'bg-indigo-100 border-indigo-300 text-indigo-800'
-                : isDark
-                  ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
-                  : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="font-medium text-sm flex items-center gap-1">
-                  {topic.important && (
-                    <span className={isDark ? 'text-yellow-400' : 'text-yellow-600'}>⭐</span>
-                  )}
-                  {topic.name}
-                </div>
-                <div className={`text-xs mt-1 ${
-                  currentPage === topic.page
-                    ? isDark ? 'text-indigo-200' : 'text-indigo-600'
-                    : isDark ? 'text-gray-400' : 'text-gray-500'
-                }`}>
-                  Page {topic.page}
-                </div>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleFavorite(topic);
-                }}
-                className={`ml-2 p-1 rounded ${
-                  isTopicFavorite(topic)
-                    ? 'text-yellow-500'
-                    : isDark ? 'text-gray-500' : 'text-gray-400'
-                }`}
-              >
-                {isTopicFavorite(topic) ? '★' : '☆'}
-              </button>
-            </div>
-          </button>
-        ))}
-      </div>
-    );
+  const handleNoteChange = (value) => {
+    const noteKey = getCurrentNoteKey();
+    setNotes(prev => ({ ...prev, [noteKey]: value }));
   };
 
   return (
@@ -297,7 +92,7 @@ const BookViewer = () => {
             }`}>Textbook Viewer</h2>
             <p className={`text-sm mt-1 ${
               isDark ? 'text-gray-400' : 'text-gray-600'
-            }`}>Smooth PDF navigation with embedded PDF.js</p>
+            }`}>Simple PDF viewer with notes</p>
           </div>
           
           <div className="flex flex-wrap gap-3">
@@ -333,41 +128,33 @@ const BookViewer = () => {
             </div>
             
             {activeTab === 'book' && (
-              <>
+              <div className="flex gap-2">
                 <select
-                  value={selectedBook}
-                  onChange={(e) => {
-                    setSelectedBook(parseInt(e.target.value));
-                    setSelectedUnit(1);
-                  }}
+                  value={selectedGrade}
+                  onChange={(e) => setSelectedGrade(parseInt(e.target.value))}
                   className={`p-2 rounded-lg border-2 transition-colors ${
                     isDark 
                       ? 'bg-gray-700 border-gray-600 text-white' 
                       : 'bg-white border-gray-300 text-gray-900'
                   }`}
                 >
-                  <option value={9}>Book 9</option>
-                  <option value={10}>Book 10</option>
+                  <option value={9}>Grade 9</option>
+                  <option value={10}>Grade 10</option>
                 </select>
                 
                 <select
-                  value={selectedUnit}
-                  onChange={(e) => {
-                    setSelectedUnit(parseInt(e.target.value));
-                  }}
+                  value={selectedBookType}
+                  onChange={(e) => setSelectedBookType(e.target.value)}
                   className={`p-2 rounded-lg border-2 transition-colors ${
                     isDark 
                       ? 'bg-gray-700 border-gray-600 text-white' 
                       : 'bg-white border-gray-300 text-gray-900'
                   }`}
                 >
-                  {[1, 2, 3, 4, 5, 6].map(unit => (
-                    <option key={unit} value={unit}>
-                      Unit {unit}: {unitNames[unit]}
-                    </option>
-                  ))}
+                  <option value="SB">Student Book</option>
+                  <option value="TG">Teacher Guide</option>
                 </select>
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -375,260 +162,50 @@ const BookViewer = () => {
 
       {/* Content Area */}
       <div className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 min-h-0">
-        {/* Enhanced Topic Navigation - Left Sidebar */}
-        {activeTab === 'book' && (
-          <div className={`lg:w-80 flex-shrink-0 rounded-xl shadow-lg border-2 p-4 lg:p-6 ${
-            isDark ? 'bg-gray-800 border-indigo-600' : 'bg-white border-indigo-200'
-          }`}>
-            <div className="flex items-center gap-2 mb-4">
-              <svg className={`w-5 h-5 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-              </svg>
-              <h3 className={`text-lg font-bold ${
-                isDark ? 'text-white' : 'text-gray-900'
-              }`}>
-                {viewMode === 'search' ? 'Search Results' : `Unit ${selectedUnit} Topics`}
-              </h3>
-            </div>
-
-            {/* Search Bar */}
-            <div className="mb-4">
-              <div className="flex gap-2 mb-3">
-                <button
-                  onClick={() => setViewMode('topics')}
-                  className={`flex-1 py-2 text-sm rounded-lg border transition-all ${
-                    viewMode === 'topics'
-                      ? isDark 
-                        ? 'bg-indigo-600 border-indigo-500 text-white' 
-                        : 'bg-indigo-100 border-indigo-300 text-indigo-800'
-                      : isDark
-                        ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
-                        : 'bg-gray-200 border-gray-300 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Topics
-                </button>
-                <button
-                  onClick={() => setViewMode('search')}
-                  className={`flex-1 py-2 text-sm rounded-lg border transition-all ${
-                    viewMode === 'search'
-                      ? isDark 
-                        ? 'bg-indigo-600 border-indigo-500 text-white' 
-                        : 'bg-indigo-100 border-indigo-300 text-indigo-800'
-                      : isDark
-                        ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
-                        : 'bg-gray-200 border-gray-300 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Search
-                </button>
-              </div>
-
-              {viewMode === 'search' ? (
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search topics across all books..."
-                  className={`w-full p-2 rounded-lg border-2 ${
-                    isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  }`}
-                />
-              ) : (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="importantOnly"
-                    checked={showImportantOnly}
-                    onChange={(e) => setShowImportantOnly(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <label htmlFor="importantOnly" className={`text-sm ${
-                    isDark ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
-                    Show important topics only
-                  </label>
-                </div>
-              )}
-            </div>
-            
-            {renderTopicNavigation()}
-
-            {/* Quick Stats */}
-            <div className={`mt-4 pt-4 border-t ${
-              isDark ? 'border-gray-700' : 'border-gray-300'
-            }`}>
-              <div className={`text-xs ${
-                isDark ? 'text-gray-400' : 'text-gray-500'
-              }`}>
-                {viewMode === 'topics' 
-                  ? `${filteredTopics.length} topics in Unit ${selectedUnit}`
-                  : `${searchResults.length} search results`
-                }
-              </div>
-            </div>
-
-            {/* Manual Page Navigation */}
-            <div className="mt-4 pt-4 border-t">
-              <label className={`block text-sm font-medium mb-2 ${
-                isDark ? 'text-gray-300' : 'text-gray-700'
-              }`}>
-                Go to Page
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  value={manualPageInput}
-                  onChange={(e) => setManualPageInput(parseInt(e.target.value) || 1)}
-                  onKeyPress={handleManualPageKeyPress}
-                  min="1"
-                  max={numPages}
-                  className={`flex-1 p-2 rounded-lg border-2 ${
-                    isDark 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                  placeholder="Page number"
-                />
-                <button
-                  onClick={handleManualPageGo}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Go
-                </button>
-              </div>
-              <div className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                Press Enter or click Go • {numPages ? `${numPages} pages total` : 'Loading...'}
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* PDF Viewer */}
-        <div className={`flex-1 flex flex-col min-h-0 ${
-          activeTab === 'book' ? 'lg:flex-1' : 'w-full'
-        }`}>
+        <div className="flex-1 flex flex-col min-h-0">
           <div className={`rounded-xl shadow-lg border-2 flex-1 flex flex-col ${
             isDark ? 'bg-gray-800 border-blue-600' : 'bg-white border-blue-200'
           }`}>
-            <div className="p-4 border-b flex justify-between items-center">
+            <div className="p-4 border-b">
               <h3 className={`text-lg font-bold ${
                 isDark ? 'text-white' : 'text-gray-900'
               }`}>
-                {activeTab === 'summary' 
-                  ? 'Book Summary' 
-                  : `Book ${selectedBook} - Unit ${selectedUnit}: ${unitNames[selectedUnit]}`
-                }
+                {getCurrentBookName()}
               </h3>
-              {activeTab === 'book' && (
-                <div className={`text-sm ${
-                  isDark ? 'text-gray-400' : 'text-gray-600'
-                }`}>
-                  Page: <span className="font-bold">{currentPage}</span> / {numPages || '?'}
-                </div>
-              )}
             </div>
             
-            <div className="flex-1 min-h-0 p-4 pb-8">
-              <div className={`rounded-lg border-2 w-full h-full min-h-[600px] flex flex-col ${
+            {/* PDF Display */}
+            <div className="flex-1 min-h-0 p-4">
+              <div className={`rounded-lg border-2 w-full h-full min-h-[600px] ${
                 isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
               }`}>
-                <div className="flex-1 flex items-center justify-center overflow-auto p-4">
-                  {pdfError ? (
-                    <div className={`text-center p-8 ${
-                      isDark ? 'text-red-400' : 'text-red-600'
-                    }`}>
-                      <div className="text-4xl mb-4">⚠️</div>
-                      <h3 className="text-xl font-bold mb-2">PDF Loading Error</h3>
-                      <p className="mb-4">{pdfError}</p>
-                      <a 
-                        href={getCurrentPdfUrl()} 
-                        download 
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        Download PDF Instead
-                      </a>
-                    </div>
-                  ) : (
-                    <Document
-                      file={getCurrentPdfUrl()}
-                      onLoadSuccess={onDocumentLoadSuccess}
-                      onLoadError={onDocumentLoadError}
-                      loading={
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                          <p className={`mt-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                            Loading PDF...
-                          </p>
-                        </div>
-                      }
-                    >
-                      <Page 
-                        pageNumber={currentPage} 
-                        loading={
-                          <div className="text-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                            <p className={`mt-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                              Loading page {currentPage}...
-                            </p>
-                          </div>
-                        }
-                      />
-                    </Document>
-                  )}
-                </div>
-                
-                {/* Page Navigation Controls */}
-                <div className={`p-4 border-t flex justify-between items-center ${
-                  isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
-                }`}>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={currentPage <= 1}
-                      className={`px-4 py-2 rounded-lg transition-colors ${
-                        currentPage <= 1
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white'
-                      }`}
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage(prev => Math.min(numPages || prev, prev + 1))}
-                      disabled={currentPage >= (numPages || 1)}
-                      className={`px-4 py-2 rounded-lg transition-colors ${
-                        currentPage >= (numPages || 1)
-                          ? 'bg-gray-400 cursor-not-allowed'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white'
-                      }`}
-                    >
-                      Next
-                    </button>
-                  </div>
-                  
-                  <div className={`text-sm ${
-                    isDark ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    Using embedded PDF.js • Smooth navigation
-                  </div>
-                  
+                <iframe 
+                  src={getCurrentPdfUrl()}
+                  className="w-full h-full rounded"
+                  title="PDF Viewer"
+                />
+              </div>
+              
+              <div className={`mt-4 text-center text-sm ${
+                isDark ? 'text-gray-400' : 'text-gray-600'
+              }`}>
+                <p>Using native PDF viewer - Use browser controls to navigate</p>
+                <p className="text-xs mt-1">
                   <a 
                     href={getCurrentPdfUrl()} 
                     download 
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    className="text-blue-500 hover:underline"
                   >
                     Download PDF
                   </a>
-                </div>
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Enhanced Notes Panel */}
+        {/* Notes Panel */}
         <div className={`lg:w-96 flex-shrink-0 rounded-xl shadow-lg border-2 p-4 lg:p-6 ${
           isDark ? 'bg-gray-800 border-green-600' : 'bg-white border-green-200'
         }`}>
@@ -640,7 +217,7 @@ const BookViewer = () => {
               <h3 className={`text-lg lg:text-xl font-bold ${
                 isDark ? 'text-white' : 'text-gray-900'
               }`}>
-                My Notes - {activeTab === 'summary' ? 'Summary' : `Book ${selectedBook}`}
+                My Notes - {getCurrentBookName()}
               </h3>
             </div>
             <div className={`text-xs px-2 py-1 rounded ${
@@ -652,16 +229,8 @@ const BookViewer = () => {
           
           <textarea
             value={currentNote}
-            onChange={(e) => {
-              if (activeTab === 'summary') {
-                setNotes(prev => ({ ...prev, summary: e.target.value }));
-              } else {
-                setNotes(prev => ({ ...prev, [`book_${selectedBook}`]: e.target.value }));
-              }
-            }}
-            placeholder={`Write your notes about ${
-              activeTab === 'summary' ? 'the book summary' : `Book ${selectedBook}`
-            } here...`}
+            onChange={(e) => handleNoteChange(e.target.value)}
+            placeholder={`Write your notes about ${getCurrentBookName()} here...`}
             className={`w-full h-64 p-4 rounded-lg border-2 resize-none ${
               isDark 
                 ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
@@ -673,17 +242,11 @@ const BookViewer = () => {
             <div className={`text-xs ${
               isDark ? 'text-gray-400' : 'text-gray-500'
             }`}>
-              Auto-saves when changing tabs
+              Notes are saved manually
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => {
-                  if (activeTab === 'summary') {
-                    setNotes(prev => ({ ...prev, summary: '' }));
-                  } else {
-                    setNotes(prev => ({ ...prev, [`book_${selectedBook}`]: '' }));
-                  }
-                }}
+                onClick={() => handleNoteChange('')}
                 className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
                 Clear
@@ -692,7 +255,7 @@ const BookViewer = () => {
                 onClick={handleNoteSave}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Save
+                Save Notes
               </button>
             </div>
           </div>

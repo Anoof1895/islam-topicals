@@ -164,7 +164,7 @@ const App = () => {
       case 'unseen-topics':
         return <UnseenTopics allQuestions={allQuestions} unitNames={unitNames} />;
       case 'books':
-        return <BookViewer unitNames={unitNames} />;
+        return <BookViewer />;
       default:
         return renderMainView();
     }
