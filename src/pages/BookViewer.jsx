@@ -3,9 +3,12 @@ import { useTheme } from "../context/ThemeContext";
 
 const BookViewer = () => {
   const [selectedGrade, setSelectedGrade] = useState(9);
-  const [selectedBookType, setSelectedBookType] = useState('SB'); // 'SB' or 'TG'
+  const [selectedBookType, setSelectedBookType] = useState('SB');
   const [activeTab, setActiveTab] = useState('book');
   const [notes, setNotes] = useState({});
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
+  const [saveStatus, setSaveStatus] = useState('');
   
   const { isDark } = useTheme();
 
@@ -18,29 +21,9 @@ const BookViewer = () => {
     summary: "/pdfs/Summary.pdf"
   };
 
-  // Get current PDF URL
-  const getCurrentPdfUrl = () => {
-    if (activeTab === 'summary') {
-      return pdfFiles.summary;
-    }
-    
-    const bookKey = `grade${selectedGrade}${selectedBookType}`;
-    return pdfFiles[bookKey];
-  };
-
-  // Get current book display name
-  const getCurrentBookName = () => {
-    if (activeTab === 'summary') {
-      return 'Book Summary';
-    }
-    return `Grade ${selectedGrade} ${selectedBookType === 'SB' ? 'Student Book' : 'Teacher Guide'}`;
-  };
-
   // Load notes from localStorage
   useEffect(() => {
     const loadedNotes = {};
-    
-    // Load notes for all combinations
     [9, 10].forEach(grade => {
       ['SB', 'TG'].forEach(bookType => {
         const noteKey = `grade_${grade}_${bookType}`;
@@ -59,6 +42,23 @@ const BookViewer = () => {
     setNotes(loadedNotes);
   }, []);
 
+  // Get current PDF URL
+  const getCurrentPdfUrl = () => {
+    if (activeTab === 'summary') {
+      return pdfFiles.summary;
+    }
+    const bookKey = `grade${selectedGrade}${selectedBookType}`;
+    return pdfFiles[bookKey];
+  };
+
+  // Get current book display name
+  const getCurrentBookName = () => {
+    if (activeTab === 'summary') {
+      return 'Book Summary';
+    }
+    return `Grade ${selectedGrade} ${selectedBookType === 'SB' ? 'Student Book' : 'Teacher Guide'}`;
+  };
+
   const getCurrentNoteKey = () => {
     if (activeTab === 'summary') {
       return 'summary';
@@ -68,15 +68,30 @@ const BookViewer = () => {
 
   const currentNote = notes[getCurrentNoteKey()] || '';
 
-  const handleNoteSave = () => {
-    const noteKey = getCurrentNoteKey();
-    localStorage.setItem(`book_notes_${noteKey}`, currentNote);
-    alert('Notes saved!');
-  };
+  // Auto-save notes with debouncing
+  useEffect(() => {
+    if (currentNote.trim() === '') return;
+    
+    const timer = setTimeout(() => {
+      const noteKey = getCurrentNoteKey();
+      localStorage.setItem(`book_notes_${noteKey}`, currentNote);
+      setSaveStatus('Auto-saved');
+      setTimeout(() => setSaveStatus(''), 2000);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [currentNote]);
 
   const handleNoteChange = (value) => {
     const noteKey = getCurrentNoteKey();
     setNotes(prev => ({ ...prev, [noteKey]: value }));
+  };
+
+  const handleManualSave = () => {
+    const noteKey = getCurrentNoteKey();
+    localStorage.setItem(`book_notes_${noteKey}`, currentNote);
+    setSaveStatus('Saved!');
+    setTimeout(() => setSaveStatus(''), 2000);
   };
 
   return (
@@ -92,7 +107,7 @@ const BookViewer = () => {
             }`}>Textbook Viewer</h2>
             <p className={`text-sm mt-1 ${
               isDark ? 'text-gray-400' : 'text-gray-600'
-            }`}>Simple PDF viewer with notes</p>
+            }`}>PDF Viewer with notes</p>
           </div>
           
           <div className="flex flex-wrap gap-3">
@@ -167,16 +182,32 @@ const BookViewer = () => {
           <div className={`rounded-xl shadow-lg border-2 flex-1 flex flex-col ${
             isDark ? 'bg-gray-800 border-blue-600' : 'bg-white border-blue-200'
           }`}>
-            <div className="p-4 border-b">
+            <div className="p-4 border-b flex justify-between items-center">
               <h3 className={`text-lg font-bold ${
                 isDark ? 'text-white' : 'text-gray-900'
               }`}>
                 {getCurrentBookName()}
               </h3>
+              {pdfError && (
+                <div className="text-red-500 text-sm">{pdfError}</div>
+              )}
             </div>
             
             {/* PDF Display */}
-            <div className="flex-1 min-h-0 p-4">
+            <div className="flex-1 min-h-0 p-4 relative">
+              {pdfLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-10">
+                  <div className="flex flex-col items-center">
+                    <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${
+                      isDark ? 'border-blue-400' : 'border-blue-600'
+                    }`}></div>
+                    <p className={`mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Loading PDF...
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               <div className={`rounded-lg border-2 w-full h-full min-h-[600px] ${
                 isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
               }`}>
@@ -184,6 +215,15 @@ const BookViewer = () => {
                   src={getCurrentPdfUrl()}
                   className="w-full h-full rounded"
                   title="PDF Viewer"
+                  onLoadStart={() => setPdfLoading(true)}
+                  onLoad={() => {
+                    setPdfLoading(false);
+                    setPdfError(null);
+                  }}
+                  onError={() => {
+                    setPdfLoading(false);
+                    setPdfError(`Failed to load: ${getCurrentBookName()}`);
+                  }}
                 />
               </div>
               
@@ -240,9 +280,9 @@ const BookViewer = () => {
           
           <div className="flex justify-between items-center mt-4">
             <div className={`text-xs ${
-              isDark ? 'text-gray-400' : 'text-gray-500'
+              saveStatus ? 'text-green-500' : isDark ? 'text-gray-400' : 'text-gray-500'
             }`}>
-              Notes are saved manually
+              {saveStatus || 'Auto-saves while typing'}
             </div>
             <div className="flex gap-2">
               <button
@@ -252,10 +292,10 @@ const BookViewer = () => {
                 Clear
               </button>
               <button
-                onClick={handleNoteSave}
+                onClick={handleManualSave}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Save Notes
+                Save Now
               </button>
             </div>
           </div>
