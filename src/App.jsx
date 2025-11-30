@@ -1,11 +1,13 @@
 import React, { useState, useMemo } from "react";
 import allQuestions from "./questionsData";
+import predictedQuestions from "./predictedQuestionsData";
 import Filters from "./components/Filters";
 import QuestionList from "./components/QuestionList";
 import QuestionView from "./pages/QuestionView";
 import UnseenTopics from "./pages/UnseenTopics";
 import QuizGenerator from "./pages/QuizGenerator";
 import BookViewer from "./pages/BookViewer";
+import PredictedQuestions from "./pages/PredictedQuestions";
 import { topicNames, getTopicName } from "./topicNames";
 import { useTheme } from "./context/ThemeContext";
 
@@ -24,7 +26,7 @@ const App = () => {
     2: "Khadhees", 
     3: "Fiqh",
     4: "Thaareekh",
-    5: "Sqaafa",
+    5: "Saqaafa",
     6: "Akhlaaq"
   };
 
@@ -48,6 +50,7 @@ const App = () => {
     localStorage.setItem('favoriteQuestions', JSON.stringify(newFavorites));
   };
 
+  // Only use past papers for main view
   const options = useMemo(() => ({
     book: [...new Set(allQuestions.map(q => q.book))].sort((a, b) => a - b),
     year: [...new Set(allQuestions.map(q => q.year))].sort((a, b) => b - a),
@@ -165,6 +168,15 @@ const App = () => {
         return <UnseenTopics allQuestions={allQuestions} unitNames={unitNames} />;
       case 'books':
         return <BookViewer />;
+      case 'predicted':
+        return <PredictedQuestions 
+          predictedQuestions={predictedQuestions}
+          unitNames={unitNames}
+          questionTypes={questionTypes}
+          getTopicName={getTopicName}
+          onToggleFavorite={toggleFavorite}
+          favorites={favorites}
+        />;
       default:
         return renderMainView();
     }
@@ -176,6 +188,7 @@ const App = () => {
         ? 'bg-gradient-to-br from-gray-900 to-gray-800 text-white' 
         : 'bg-gradient-to-br from-slate-50 to-blue-50/30 text-gray-900'
     }`}>
+      {/* Header remains the same */}
       <header className={`border-b shadow-sm transition-colors duration-300 ${
         isDark 
           ? 'bg-gray-800 border-gray-700' 
@@ -239,6 +252,20 @@ const App = () => {
                   📖 Books
                 </button>
                 <button
+                  onClick={() => setCurrentView('predicted')}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    currentView === 'predicted'
+                      ? isDark
+                        ? "bg-gray-600 text-white shadow-sm"
+                        : "bg-white text-pink-600 shadow-sm"
+                      : isDark
+                        ? "text-gray-400 hover:text-gray-200"
+                        : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  🔮 Predicted
+                </button>
+                <button
                   onClick={() => setCurrentView('unseen-topics')}
                   className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                     currentView === 'unseen-topics'
@@ -281,6 +308,12 @@ const App = () => {
                     isDark ? 'text-purple-400' : 'text-purple-600'
                   }`}>
                     Textbook Viewer
+                  </div>
+                ) : currentView === 'predicted' ? (
+                  <div className={`font-semibold text-sm ${
+                    isDark ? 'text-pink-400' : 'text-pink-600'
+                  }`}>
+                    Teacher's Predictions
                   </div>
                 ) : (
                   <div className={`font-semibold text-sm ${
