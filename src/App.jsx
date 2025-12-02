@@ -188,7 +188,7 @@ const App = () => {
         ? 'bg-gradient-to-br from-gray-900 to-gray-800 text-white' 
         : 'bg-gradient-to-br from-slate-50 to-blue-50/30 text-gray-900'
     }`}>
-      {/* Header remains the same */}
+      {/* Header */}
       <header className={`border-b shadow-sm transition-colors duration-300 ${
         isDark 
           ? 'bg-gray-800 border-gray-700' 
@@ -206,12 +206,16 @@ const App = () => {
                 </p>
               </div>
               
-              <div className={`flex rounded-lg p-1 ${
+              {/* Updated Navigation Container with Horizontal Scroll for Mobile */}
+              <div className={`flex overflow-x-auto rounded-lg p-1 ${
                 isDark ? 'bg-gray-700' : 'bg-gray-100'
-              }`}>
+              }`} style={{ 
+                scrollbarWidth: 'thin',
+                WebkitOverflowScrolling: 'touch'
+              }}>
                 <button
                   onClick={() => setCurrentView('main')}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                  className={`flex-shrink-0 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     currentView === 'main'
                       ? isDark
                         ? "bg-gray-600 text-white shadow-sm"
@@ -225,7 +229,7 @@ const App = () => {
                 </button>
                 <button
                   onClick={() => setCurrentView('quiz')}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                  className={`flex-shrink-0 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     currentView === 'quiz'
                       ? isDark
                         ? "bg-gray-600 text-white shadow-sm"
@@ -239,7 +243,7 @@ const App = () => {
                 </button>
                 <button
                   onClick={() => setCurrentView('books')}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                  className={`flex-shrink-0 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     currentView === 'books'
                       ? isDark
                         ? "bg-gray-600 text-white shadow-sm"
@@ -253,7 +257,7 @@ const App = () => {
                 </button>
                 <button
                   onClick={() => setCurrentView('predicted')}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                  className={`flex-shrink-0 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     currentView === 'predicted'
                       ? isDark
                         ? "bg-gray-600 text-white shadow-sm"
@@ -267,7 +271,7 @@ const App = () => {
                 </button>
                 <button
                   onClick={() => setCurrentView('unseen-topics')}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                  className={`flex-shrink-0 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     currentView === 'unseen-topics'
                       ? isDark
                         ? "bg-gray-600 text-white shadow-sm"
@@ -277,7 +281,8 @@ const App = () => {
                         : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
-                  🔍 Unseen Topics
+                  <span className="sm:hidden">🔍 Unseen</span>
+                  <span className="hidden sm:inline">🔍 Unseen Topics</span>
                 </button>
               </div>
             </div>

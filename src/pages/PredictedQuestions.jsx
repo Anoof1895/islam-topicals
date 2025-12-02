@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { topicNames, getTopicName } from "../topicNames";
 import Select from "react-select";
@@ -209,7 +209,7 @@ const PredictedQuestions = ({ predictedQuestions, unitNames, questionTypes, getT
     }) || [];
   };
 
-  // Keyboard Shortcuts Help Modal (same as main viewer)
+  // Keyboard Shortcuts Help Modal
   const ShortcutsHelpModal = () => {
     if (!showShortcutsHelp) return null;
 
@@ -277,8 +277,44 @@ const PredictedQuestions = ({ predictedQuestions, unitNames, questionTypes, getT
     );
   };
 
-  // Simple Question List component
+  // Question List Component with Pagination (similar to main QuestionList)
   const QuestionList = ({ questions, selectedQuestionId, setSelectedQuestionId, unitNames, getTopicName, favorites, toggleFavorite }) => {
+    const containerRef = useRef(null);
+    const itemRefs = useRef({});
+    
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [showFavorites, setShowFavorites] = useState(false);
+    const questionsPerPage = 10;
+
+    // Reset to page 1 when questions change significantly
+    useEffect(() => {
+      setCurrentPage(1);
+    }, [questions.length, showFavorites]);
+
+    // Get questions to display (all or favorites)
+    const questionsToDisplay = showFavorites 
+      ? questions.filter(q => favorites.includes(q.id))
+      : questions;
+
+    // Calculate pagination
+    const totalPages = Math.ceil(questionsToDisplay.length / questionsPerPage);
+    const startIndex = (currentPage - 1) * questionsPerPage;
+    const endIndex = startIndex + questionsPerPage;
+    const currentQuestions = questionsToDisplay.slice(startIndex, endIndex);
+
+    const goToNextPage = () => {
+      if (currentPage < totalPages) {
+        setCurrentPage(currentPage + 1);
+      }
+    };
+
+    const goToPrevPage = () => {
+      if (currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
+    };
+
     return (
       <div className={`rounded-xl shadow-lg border-2 h-full overflow-hidden flex flex-col transition-colors duration-300 ${
         isDark ? 'bg-gray-800 border-pink-600' : 'bg-white border-pink-200'
@@ -295,41 +331,80 @@ const PredictedQuestions = ({ predictedQuestions, unitNames, questionTypes, getT
               <p className={`text-xs lg:text-sm mt-1 ${
                 isDark ? 'text-gray-400' : 'text-gray-600'
               }`}>
-                {questions.length} questions
+                Page {currentPage} of {totalPages} • {questionsToDisplay.length} {showFavorites ? 'favorites' : 'total'}
               </p>
             </div>
+            <div className={`bg-gradient-to-r px-2 py-1 rounded-full text-xs font-semibold shadow-sm ${
+              isDark 
+                ? 'from-pink-800 to-pink-900 text-pink-200' 
+                : 'from-pink-100 to-pink-200 text-pink-800'
+            }`}>
+              {questionsToDisplay.length}
+            </div>
           </div>
+          
+          {/* Favorites Toggle */}
+          <button
+            onClick={() => setShowFavorites(!showFavorites)}
+            className={`w-full px-3 py-2 text-xs lg:text-sm font-medium rounded-lg transition-all duration-200 shadow-sm border min-h-[36px] lg:min-h-[44px] ${
+              showFavorites
+                ? isDark
+                  ? "bg-yellow-900 text-yellow-200 border-yellow-700"
+                  : "bg-yellow-100 text-yellow-700 border-yellow-300"
+                : isDark
+                  ? "bg-gray-700 text-gray-200 border-gray-600 hover:bg-gray-600"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+            }`}
+          >
+            {showFavorites ? `★ Showing Favorites (${favorites.length})` : "☆ Show Favorites"}
+          </button>
         </div>
         
         {/* List */}
-        <div className="flex-1 overflow-y-auto p-1 lg:p-3">
-          {questions.length === 0 ? (
+        <div
+          ref={containerRef}
+          className="flex-1 overflow-y-auto p-1 lg:p-3"
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'manipulation'
+          }}
+        >
+          {currentQuestions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 lg:py-12 px-4 lg:px-6 text-center">
               <div className={`w-12 h-12 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center mb-3 lg:mb-4 shadow-inner ${
                 isDark ? 'bg-pink-900' : 'bg-gradient-to-br from-pink-100 to-rose-100'
               }`}>
-                <svg className={`w-6 h-6 lg:w-8 lg:h-8 ${isDark ? 'text-pink-400' : 'text-pink-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+                {showFavorites ? (
+                  <svg className="w-6 h-6 lg:w-8 lg:h-8 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                  </svg>
+                ) : (
+                  <svg className={`w-6 h-6 lg:w-8 lg:h-8 ${isDark ? 'text-pink-400' : 'text-pink-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                )}
               </div>
               <h4 className={`text-base lg:text-lg font-semibold mb-2 ${
                 isDark ? 'text-gray-300' : 'text-gray-900'
               }`}>
-                No Questions Found
+                {showFavorites ? "No Favorite Questions" : "No Questions Found"}
               </h4>
               <p className={`text-xs lg:text-sm ${
                 isDark ? 'text-gray-500' : 'text-gray-500'
               }`}>
-                Try adjusting your filters to see more questions.
+                {showFavorites 
+                  ? "Click the star icon on questions to add them to favorites" 
+                  : "Try adjusting your filters to see more questions."}
               </p>
             </div>
           ) : (
-            questions.map((q) => {
+            currentQuestions.map((q) => {
               const isSelected = Number(selectedQuestionId) === Number(q.id);
               const isFavorite = favorites.includes(q.id);
               return (
                 <div
                   key={q.id}
+                  ref={(el) => (itemRefs.current[q.id] = el)}
                   onClick={() => setSelectedQuestionId(q.id)}
                   className={`cursor-pointer p-2 lg:p-4 mb-2 rounded-xl transition-all duration-200 border-2 shadow-sm min-h-[70px] lg:min-h-[80px] flex items-center ${
                     isSelected 
@@ -400,11 +475,65 @@ const PredictedQuestions = ({ predictedQuestions, unitNames, questionTypes, getT
             })
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className={`flex-shrink-0 p-2 lg:p-3 border-t transition-colors duration-300 ${
+            isDark 
+              ? 'border-pink-700 bg-gradient-to-r from-pink-900 to-rose-900/30' 
+              : 'border-pink-200 bg-gradient-to-r from-pink-50 to-rose-50/30'
+          }`}>
+            <div className="flex items-center justify-between">
+              <button
+                onClick={goToPrevPage}
+                disabled={currentPage === 1}
+                className={`flex items-center gap-1 px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed min-h-[36px] lg:min-h-[44px] ${
+                  isDark
+                    ? 'bg-gray-700 text-gray-200 border border-gray-600 hover:bg-gray-600'
+                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="hidden sm:inline">Previous</span>
+              </button>
+              
+              <div className={`flex items-center gap-1 lg:gap-2 text-xs lg:text-sm ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                <span className="font-semibold hidden sm:inline">Page</span>
+                <span className={`border rounded px-1 lg:px-2 py-0.5 lg:py-1 font-mono text-xs ${
+                  isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
+                }`}>
+                  {currentPage}
+                </span>
+                <span className="font-semibold">of</span>
+                <span className="font-mono text-xs lg:text-sm">{totalPages}</span>
+              </div>
+
+              <button
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+                className={`flex items-center gap-1 px-2 lg:px-3 py-1.5 lg:py-2 text-xs lg:text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed min-h-[36px] lg:min-h-[44px] ${
+                  isDark
+                    ? 'bg-gray-700 text-gray-200 border border-gray-600 hover:bg-gray-600'
+                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <span className="hidden sm:inline">Next</span>
+                <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
 
-  // Updated QuestionView component for PredictedQuestions
+  // Simple Question View component with keyboard shortcuts
   const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, questionTypes, getTopicName, onToggleFavorite, isFavorite }) => {
     const [showAnswer, setShowAnswer] = useState(false);
     const [imageLoading, setImageLoading] = useState(true);
@@ -540,7 +669,7 @@ const PredictedQuestions = ({ predictedQuestions, unitNames, questionTypes, getT
           </div>
         )}
 
-        {/* Header - Same as before */}
+        {/* Header */}
         <div className={`flex-shrink-0 p-3 lg:p-6 border-b rounded-t-xl ${
           isDark 
             ? 'border-pink-700 bg-gradient-to-r from-pink-900 to-rose-900/30' 
@@ -584,7 +713,7 @@ const PredictedQuestions = ({ predictedQuestions, unitNames, questionTypes, getT
                 </div>
               </div>
               
-              {/* Action Buttons */}
+              {/* Mobile-first responsive buttons */}
               <div className="flex flex-wrap gap-1 lg:gap-2 justify-center sm:justify-start">
                 <button
                   className={`px-2 py-1 lg:px-3 lg:py-2 text-xs lg:text-sm font-medium rounded-lg transition-all min-h-[36px] lg:min-h-[44px] ${
@@ -654,7 +783,7 @@ const PredictedQuestions = ({ predictedQuestions, unitNames, questionTypes, getT
               </div>
             </div>
 
-            {/* Question Info */}
+            {/* Question Info - Mobile responsive */}
             <div className={`flex flex-wrap items-center gap-1 lg:gap-3 p-2 lg:p-3 rounded-lg ${
               isDark ? 'bg-gray-700' : 'bg-gray-50'
             }`}>
@@ -708,7 +837,7 @@ const PredictedQuestions = ({ predictedQuestions, unitNames, questionTypes, getT
           </div>
         </div>
 
-        {/* UPDATED: Question Image Area - Positioned at top with proper scrolling */}
+        {/* Question Image - Mobile optimized */}
         <div className="flex-1 min-h-0 flex flex-col">
           <div className={`flex-1 min-h-0 p-2 lg:p-4 ${
             isDark 
