@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import allQuestions from "./questionsData";
 import predictedQuestions from "./predictedQuestionsData";
+import definitionsData from "./definitionsData";
 import Filters from "./components/Filters";
 import QuestionList from "./components/QuestionList";
 import QuestionView from "./pages/QuestionView";
@@ -8,6 +9,7 @@ import UnseenTopics from "./pages/UnseenTopics";
 import QuizGenerator from "./pages/QuizGenerator";
 import BookViewer from "./pages/BookViewer";
 import PredictedQuestions from "./pages/PredictedQuestions";
+import Definitions from "./pages/Definitions";
 import { topicNames, getTopicName } from "./topicNames";
 import { useTheme } from "./context/ThemeContext";
 
@@ -177,6 +179,13 @@ const App = () => {
           onToggleFavorite={toggleFavorite}
           favorites={favorites}
         />;
+      case 'definitions':
+        return <Definitions 
+          unitNames={unitNames}
+          onToggleFavorite={toggleFavorite}
+          favorites={favorites}
+          setCurrentView={setCurrentView}
+        />;
       default:
         return renderMainView();
     }
@@ -270,6 +279,20 @@ const App = () => {
                   🔮 Predicted
                 </button>
                 <button
+                  onClick={() => setCurrentView('definitions')}
+                  className={`flex-shrink-0 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
+                    currentView === 'definitions'
+                      ? isDark
+                        ? "bg-gray-600 text-white shadow-sm"
+                        : "bg-white text-teal-600 shadow-sm"
+                      : isDark
+                        ? "text-gray-400 hover:text-gray-200"
+                        : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  📖 Definitions
+                </button>
+                <button
                   onClick={() => setCurrentView('unseen-topics')}
                   className={`flex-shrink-0 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     currentView === 'unseen-topics'
@@ -319,6 +342,12 @@ const App = () => {
                     isDark ? 'text-pink-400' : 'text-pink-600'
                   }`}>
                     Teacher's Predictions
+                  </div>
+                ) : currentView === 'definitions' ? (
+                  <div className={`font-semibold text-sm ${
+                    isDark ? 'text-teal-400' : 'text-teal-600'
+                  }`}>
+                    Definitions (Thaaraf)
                   </div>
                 ) : (
                   <div className={`font-semibold text-sm ${

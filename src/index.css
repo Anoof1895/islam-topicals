@@ -12,3 +12,30 @@ body {
 .dhivehi-text {
   font-family: 'Faruma', 'MV Typewriter', 'Noto Sans Arabic', sans-serif;
 }
+/* Image optimization for better display */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+}
+
+/* Better image scaling */
+@media (min-width: 1024px) {
+  .image-container-lg {
+    max-height: 75vh !important;
+  }
+  
+  .image-content-lg {
+    max-width: 90% !important;
+    max-height: 70vh !important;
+  }
+}
+
+/* Print-friendly images */
+@media print {
+  img {
+    max-width: 100% !important;
+    max-height: none !important;
+    page-break-inside: avoid;
+  }
+}
