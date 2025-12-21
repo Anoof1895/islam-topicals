@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "../context/ThemeContext";
+import SmartText from '../components/SmartText';
 
 const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, questionTypes, getTopicName, onToggleFavorite, isFavorite }) => {
   const [showAnswer, setShowAnswer] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [showFavoriteFeedback, setShowFavoriteFeedback] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
@@ -30,10 +32,80 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
   useEffect(() => {
     setShowAnswer(false);
     setImageLoading(true);
+    setImageError(false);
     setShowNotes(false);
   }, [question]);
 
-  // Keyboard shortcuts
+  // Memoized navigation functions with useCallback
+  const goNext = useCallback(() => {
+    if (!question || !questions) return;
+    
+    const currentIndex = questions.findIndex(q => Number(q.id) === Number(question.id));
+    if (currentIndex < questions.length - 1) {
+      setSelectedQuestionId(questions[currentIndex + 1].id);
+    }
+  }, [question, questions, setSelectedQuestionId]);
+
+  const goPrevious = useCallback(() => {
+    if (!question || !questions) return;
+    
+    const currentIndex = questions.findIndex(q => Number(q.id) === Number(question.id));
+    if (currentIndex > 0) {
+      setSelectedQuestionId(questions[currentIndex - 1].id);
+    }
+  }, [question, questions, setSelectedQuestionId]);
+
+  // Print functionality
+  const handlePrint = useCallback(() => {
+    if (!question) return;
+    
+    const printWindow = window.open('', '_blank');
+    const unitName = getUnitName(question.unit);
+    const topicName = getTopicName(question.book, question.unit, question.topic);
+    
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Question ${question.questionNumber}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+            .header { border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+            .info { margin: 8px 0; color: #555; font-size: 14px; }
+            .question-number { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="question-number">${showAnswer ? 'Answer' : 'Question'} ${question.questionNumber}</div>
+            <div class="info">
+              <strong>Year:</strong> ${question.year} | 
+              <strong>Paper:</strong> ${question.paper} | 
+              <strong>Book:</strong> ${question.book}
+            </div>
+            <div class="info">
+              <strong>Unit:</strong> ${unitName} | 
+              <strong>Topic:</strong> ${topicName}
+            </div>
+          </div>
+          <img src="${showAnswer ? question.answerImage : question.image}" alt="${showAnswer ? 'Answer' : 'Question'} ${question.questionNumber}" />
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  }, [question, showAnswer, getTopicName]);
+
+  // Favorite functionality
+  const handleFavorite = useCallback(() => {
+    if (onToggleFavorite && question) {
+      onToggleFavorite(question.id);
+      setShowFavoriteFeedback(true);
+      setTimeout(() => setShowFavoriteFeedback(false), 2000);
+    }
+  }, [onToggleFavorite, question]);
+
+  // Keyboard shortcuts with all dependencies
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -84,77 +156,16 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [question, showAnswer, isFavorite]);
-
-  // Memoized navigation functions
-  const goNext = useCallback(() => {
-    const currentIndex = questions.findIndex(q => Number(q.id) === Number(question.id));
-    if (currentIndex < questions.length - 1) {
-      setSelectedQuestionId(questions[currentIndex + 1].id);
-    }
-  }, [question, questions, setSelectedQuestionId]);
-
-  const goPrevious = useCallback(() => {
-    const currentIndex = questions.findIndex(q => Number(q.id) === Number(question.id));
-    if (currentIndex > 0) {
-      setSelectedQuestionId(questions[currentIndex - 1].id);
-    }
-  }, [question, questions, setSelectedQuestionId]);
-
-  // Print functionality
-  const handlePrint = () => {
-    const printWindow = window.open('', '_blank');
-    const unitName = getUnitName(question.unit);
-    const topicName = getTopicName(question.book, question.unit, question.topic);
-    
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Question ${question.questionNumber}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
-            .header { border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
-            .info { margin: 8px 0; color: #555; font-size: 14px; }
-            .question-number { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="question-number">${showAnswer ? 'Answer' : 'Question'} ${question.questionNumber}</div>
-            <div class="info">
-              <strong>Year:</strong> ${question.year} | 
-              <strong>Paper:</strong> ${question.paper} | 
-              <strong>Book:</strong> ${question.book}
-            </div>
-            <div class="info">
-              <strong>Unit:</strong> ${unitName} | 
-              <strong>Topic:</strong> ${topicName}
-            </div>
-          </div>
-          <img src="${showAnswer ? question.answerImage : question.image}" alt="${showAnswer ? 'Answer' : 'Question'} ${question.questionNumber}" />
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
-  };
-
-  // Favorite functionality
-  const handleFavorite = () => {
-    if (onToggleFavorite && question) {
-      onToggleFavorite(question.id);
-      setShowFavoriteFeedback(true);
-      setTimeout(() => setShowFavoriteFeedback(false), 2000);
-    }
-  };
+  }, [goNext, goPrevious, handlePrint, handleFavorite, showAnswer, isFavorite]);
 
   const handleImageLoad = () => {
     setImageLoading(false);
+    setImageError(false);
   };
 
   const handleImageError = () => {
     setImageLoading(false);
+    setImageError(true);
   };
 
   if (!question) {
@@ -189,10 +200,8 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
   const totalQuestions = questions.length;
 
   const getQuestionTypeNames = (typeNumbers) => {
-    // Same order as filters: Thaaraf, Dheyha, Mauloomaathu, Beynun Kurun, Haadhisaa, Dhiraasaa, Gina Marks
     const displayOrder = [1, 2, 5, 7, 3, 6, 4];
     
-    // Create a copy and sort by the displayOrder
     const sortedTypes = [...typeNumbers].sort((a, b) => 
       displayOrder.indexOf(a) - displayOrder.indexOf(b)
     );
@@ -557,12 +566,9 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
               isDark ? 'bg-purple-900' : 'bg-purple-50'
             }`}>
               <span className={`font-semibold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>Topic:</span>
-              <span 
-                className={isDark ? 'text-purple-100' : 'text-purple-900'}
-                style={{ fontFamily: 'Faruma, Arial' }}
-              >
+              <SmartText className={isDark ? 'text-green-100' : 'text-green-900'}>
                 {getTopicName(question.book, question.unit, question.topic)}
-              </span>
+              </SmartText>
             </div>
           </div>
 
@@ -660,6 +666,36 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
                     </div>
                   )}
                   
+                  {/* Error State */}
+                  {imageError && (
+                    <div className={`absolute inset-0 flex flex-col items-center justify-center rounded-lg z-10 p-4 ${
+                      isDark ? 'bg-gray-600 bg-opacity-90' : 'bg-white bg-opacity-90'
+                    }`}>
+                      <svg className={`w-12 h-12 mb-4 ${isDark ? 'text-red-400' : 'text-red-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.226 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <p className={`text-center font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                        Failed to load image
+                      </p>
+                      <p className={`text-sm mt-2 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Please check your connection or try refreshing
+                      </p>
+                      <button
+                        onClick={() => {
+                          setImageLoading(true);
+                          setImageError(false);
+                        }}
+                        className={`mt-4 px-4 py-2 rounded-lg font-medium transition-colors ${
+                          isDark 
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                            : 'bg-blue-100 hover:bg-blue-200 text-blue-800'
+                        }`}
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  )}
+                  
                   <img
                     src={showAnswer ? answerImage : questionImage}
                     alt={showAnswer ? `Answer ${question.questionNumber}` : `Question ${question.questionNumber}`}
@@ -683,4 +719,4 @@ const QuestionView = ({ question, questions, setSelectedQuestionId, unitNames, q
   );
 };
 
-export default QuestionView;
+export default React.memo(QuestionView);

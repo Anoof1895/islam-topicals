@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import allQuestions from "./questionsData";
 import predictedQuestions from "./predictedQuestionsData";
 import definitionsData from "./definitionsData";
@@ -13,27 +13,39 @@ import Definitions from "./pages/Definitions";
 import { topicNames, getTopicName } from "./topicNames";
 import { useTheme } from "./context/ThemeContext";
 
+// Memoized components
+const MemoizedFilters = React.memo(Filters);
+const MemoizedQuestionList = React.memo(QuestionList);
+const MemoizedQuestionView = React.memo(QuestionView);
+const MemoizedPredictedQuestions = React.memo(PredictedQuestions);
+const MemoizedDefinitions = React.memo(Definitions);
+
 const App = () => {
   const [selectedFilters, setSelectedFilters] = useState({});
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
-  const [favorites, setFavorites] = useState(() => 
-    JSON.parse(localStorage.getItem('favoriteQuestions') || '[]')
-  );
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('favoriteQuestions') || '[]');
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+      return [];
+    }
+  });
   const [currentView, setCurrentView] = useState('main');
   const { isDark, toggleTheme } = useTheme();
 
   // Unit name mapping
-  const unitNames = {
+  const unitNames = useMemo(() => ({
     1: "Aqeedha",
     2: "Khadhees", 
     3: "Fiqh",
     4: "Thaareekh",
     5: "Saqaafa",
     6: "Akhlaaq"
-  };
+  }), []);
 
   // Question type mapping
-  const questionTypes = {
+  const questionTypes = useMemo(() => ({
     1: "Thaaraf",
     2: "Dheyha",
     3: "Haadhisaa", 
@@ -41,18 +53,22 @@ const App = () => {
     5: "Mauloomaathu",
     6: "Dhiraasaa",
     7: "Beynun Kurun"
-  };
+  }), []);
 
-  // Toggle favorite function
-  const toggleFavorite = (questionId) => {
-    const newFavorites = favorites.includes(questionId)
-      ? favorites.filter(id => id !== questionId)
-      : [...favorites, questionId];
-    setFavorites(newFavorites);
-    localStorage.setItem('favoriteQuestions', JSON.stringify(newFavorites));
-  };
+  // Memoized toggleFavorite function
+  const toggleFavorite = useCallback((questionId) => {
+    try {
+      const newFavorites = favorites.includes(questionId)
+        ? favorites.filter(id => id !== questionId)
+        : [...favorites, questionId];
+      setFavorites(newFavorites);
+      localStorage.setItem('favoriteQuestions', JSON.stringify(newFavorites));
+    } catch (error) {
+      console.error('Error saving favorites:', error);
+    }
+  }, [favorites]);
 
-  // Only use past papers for main view
+  // Memoized filter options
   const options = useMemo(() => ({
     book: [...new Set(allQuestions.map(q => q.book))].sort((a, b) => a - b),
     year: [...new Set(allQuestions.map(q => q.year))].sort((a, b) => b - a),
@@ -65,6 +81,7 @@ const App = () => {
     paperType: ['specimen', 'actual'],
   }), []);
 
+  // Memoized filtered questions
   const filteredQuestions = useMemo(() => {
     const filtered = allQuestions.filter(q =>
       Object.entries(selectedFilters).every(([field, values]) => {
@@ -115,13 +132,28 @@ const App = () => {
     });
   }, [selectedFilters]);
 
-  const renderMainView = () => (
+  // Memoized current question
+  const currentQuestion = useMemo(() => 
+    filteredQuestions.find(q => q.id === selectedQuestionId),
+    [filteredQuestions, selectedQuestionId]
+  );
+
+  // Memoized navigation handlers
+  const handleViewChange = useCallback((view) => {
+    setCurrentView(view);
+  }, []);
+
+  const handleFilterSearch = useCallback(() => {
+    setSelectedQuestionId(null);
+  }, []);
+
+  const renderMainView = useCallback(() => (
     <>
-      <Filters
+      <MemoizedFilters
         options={options}
         selectedFilters={selectedFilters}
         setSelectedFilters={setSelectedFilters}
-        onSearch={() => setSelectedQuestionId(null)}
+        onSearch={handleFilterSearch}
         unitNames={unitNames}
         questionTypes={questionTypes}
         topicNames={topicNames}
@@ -129,7 +161,7 @@ const App = () => {
       
       <div className="flex flex-col lg:flex-row gap-3 lg:gap-6 mt-3 lg:mt-6 flex-1 min-h-0">
         <div className="w-full lg:w-96 xl:w-80 2xl:w-96 flex-shrink-0 flex flex-col min-h-0">
-          <QuestionList
+          <MemoizedQuestionList
             questions={filteredQuestions}
             selectedQuestionId={selectedQuestionId}
             setSelectedQuestionId={setSelectedQuestionId}
@@ -141,8 +173,8 @@ const App = () => {
         </div>
         
         <div className="flex-1 min-w-0 flex flex-col min-h-0">
-          <QuestionView
-            question={filteredQuestions.find(q => q.id === selectedQuestionId)}
+          <MemoizedQuestionView
+            question={currentQuestion}
             questions={filteredQuestions}
             setSelectedQuestionId={setSelectedQuestionId}
             unitNames={unitNames}
@@ -154,9 +186,9 @@ const App = () => {
         </div>
       </div>
     </>
-  );
+  ), [options, selectedFilters, unitNames, questionTypes, filteredQuestions, selectedQuestionId, favorites, toggleFavorite, currentQuestion, handleFilterSearch]);
 
-  const renderCurrentView = () => {
+  const renderCurrentView = useCallback(() => {
     switch(currentView) {
       case 'quiz':
         return <QuizGenerator 
@@ -164,14 +196,14 @@ const App = () => {
           unitNames={unitNames}
           questionTypes={questionTypes}
           setSelectedQuestionId={setSelectedQuestionId}
-          setCurrentView={setCurrentView}
+          setCurrentView={handleViewChange}
         />;
       case 'unseen-topics':
         return <UnseenTopics allQuestions={allQuestions} unitNames={unitNames} />;
       case 'books':
         return <BookViewer />;
       case 'predicted':
-        return <PredictedQuestions 
+        return <MemoizedPredictedQuestions 
           predictedQuestions={predictedQuestions}
           unitNames={unitNames}
           questionTypes={questionTypes}
@@ -180,16 +212,16 @@ const App = () => {
           favorites={favorites}
         />;
       case 'definitions':
-        return <Definitions 
+        return <MemoizedDefinitions 
           unitNames={unitNames}
           onToggleFavorite={toggleFavorite}
           favorites={favorites}
-          setCurrentView={setCurrentView}
+          setCurrentView={handleViewChange}
         />;
       default:
         return renderMainView();
     }
-  };
+  }, [currentView, unitNames, questionTypes, favorites, toggleFavorite, renderMainView, handleViewChange]);
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${
@@ -215,7 +247,7 @@ const App = () => {
                 </p>
               </div>
               
-              {/* Updated Navigation Container with Horizontal Scroll for Mobile */}
+              {/* Updated Navigation Container */}
               <div className={`flex overflow-x-auto rounded-lg p-1 ${
                 isDark ? 'bg-gray-700' : 'bg-gray-100'
               }`} style={{ 
@@ -223,7 +255,7 @@ const App = () => {
                 WebkitOverflowScrolling: 'touch'
               }}>
                 <button
-                  onClick={() => setCurrentView('main')}
+                  onClick={() => handleViewChange('main')}
                   className={`flex-shrink-0 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     currentView === 'main'
                       ? isDark
@@ -237,7 +269,7 @@ const App = () => {
                   📚 Questions
                 </button>
                 <button
-                  onClick={() => setCurrentView('quiz')}
+                  onClick={() => handleViewChange('quiz')}
                   className={`flex-shrink-0 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     currentView === 'quiz'
                       ? isDark
@@ -251,7 +283,7 @@ const App = () => {
                   🎯 Quiz
                 </button>
                 <button
-                  onClick={() => setCurrentView('books')}
+                  onClick={() => handleViewChange('books')}
                   className={`flex-shrink-0 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     currentView === 'books'
                       ? isDark
@@ -265,7 +297,7 @@ const App = () => {
                   📖 Books
                 </button>
                 <button
-                  onClick={() => setCurrentView('predicted')}
+                  onClick={() => handleViewChange('predicted')}
                   className={`flex-shrink-0 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     currentView === 'predicted'
                       ? isDark
@@ -279,7 +311,7 @@ const App = () => {
                   🔮 Predicted
                 </button>
                 <button
-                  onClick={() => setCurrentView('definitions')}
+                  onClick={() => handleViewChange('definitions')}
                   className={`flex-shrink-0 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     currentView === 'definitions'
                       ? isDark
@@ -293,7 +325,7 @@ const App = () => {
                   📖 Definitions
                 </button>
                 <button
-                  onClick={() => setCurrentView('unseen-topics')}
+                  onClick={() => handleViewChange('unseen-topics')}
                   className={`flex-shrink-0 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     currentView === 'unseen-topics'
                       ? isDark

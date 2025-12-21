@@ -353,7 +353,9 @@ const Definitions = ({ unitNames, onToggleFavorite, favorites, setCurrentView })
                         }`}>
                           Book {def.book}
                         </div>
-                        <div className="font-semibold truncate text-sm lg:text-base">
+                        <div className={`font-semibold truncate text-sm lg:text-base ${
+                          /[\u0780-\u07BF]/.test(def.name) ? 'dhivehi-text' : ''
+                        }`} lang={/[\u0780-\u07BF]/.test(def.name) ? 'dv' : 'en'}>
                           {highlightSearchTerm(def.name, searchTerm)}
                         </div>
                         <div className={`text-xs mt-1 truncate ${
@@ -459,11 +461,13 @@ const Definitions = ({ unitNames, onToggleFavorite, favorites, setCurrentView })
   // Definition View Component (simplified - no question/answer toggle)
   const DefinitionView = ({ definition, definitions, setSelectedQuestionId, unitNames, onToggleFavorite, isFavorite }) => {
     const [imageLoading, setImageLoading] = useState(true);
+    const [imageError, setImageError] = useState(false); // ADD THIS LINE
     const [showFavoriteFeedback, setShowFavoriteFeedback] = useState(false);
     const [currentNote, setCurrentNote] = useState('');
 
     useEffect(() => {
       setImageLoading(true);
+      setImageError(false); // RESET ERROR STATE
       if (definition) {
         const note = localStorage.getItem(`definition_notes_${definition.id}`) || '';
         setCurrentNote(note);
@@ -513,10 +517,12 @@ const Definitions = ({ unitNames, onToggleFavorite, favorites, setCurrentView })
 
     const handleImageLoad = () => {
       setImageLoading(false);
+      setImageError(false);
     };
 
     const handleImageError = () => {
       setImageLoading(false);
+      setImageError(true);
     };
 
     const saveNote = () => {
@@ -802,12 +808,42 @@ const Definitions = ({ unitNames, onToggleFavorite, favorites, setCurrentView })
                         </div>
                       )}
                       
+                      {/* Error State */}
+                      {imageError && (
+                        <div className={`absolute inset-0 flex flex-col items-center justify-center rounded-lg z-10 p-4 ${
+                          isDark ? 'bg-gray-600/90' : 'bg-white/90'
+                        }`}>
+                          <svg className={`w-12 h-12 mb-4 ${isDark ? 'text-red-400' : 'text-red-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.226 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          <p className={`text-center font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                            Failed to load image
+                          </p>
+                          <p className={`text-sm mt-2 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Please check your connection or try refreshing
+                          </p>
+                          <button
+                            onClick={() => {
+                              setImageLoading(true);
+                              setImageError(false);
+                            }}
+                            className={`mt-4 px-4 py-2 rounded-lg font-medium transition-colors ${
+                              isDark 
+                                ? 'bg-teal-600 hover:bg-teal-700 text-white' 
+                                : 'bg-teal-100 hover:bg-teal-200 text-teal-800'
+                            }`}
+                          >
+                            Retry
+                          </button>
+                        </div>
+                      )}
+                      
                       <img
                         src={definition.image}
                         alt={`Definition: ${definition.name}`}
                         className="max-w-full h-auto rounded shadow-md transition-opacity duration-300"
                         style={{ 
-                          opacity: imageLoading ? 0 : 1,
+                          opacity: imageLoading || imageError ? 0 : 1, // ADD imageError here
                           WebkitTouchCallout: 'none',
                           WebkitUserSelect: 'none',
                           userSelect: 'none'
@@ -1281,4 +1317,4 @@ const Definitions = ({ unitNames, onToggleFavorite, favorites, setCurrentView })
   );
 };
 
-export default Definitions;
+export default React.memo(Definitions);

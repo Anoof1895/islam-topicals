@@ -1,10 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { useTheme } from "../context/ThemeContext";
 
 const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitNames, questionTypes, topicNames }) => {
   const { isDark } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  
+  // Fix for hydration error - check window width on client side only
+  useEffect(() => {
+    const checkIfDesktop = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    
+    // Check initially
+    checkIfDesktop();
+    
+    // Add resize listener
+    window.addEventListener('resize', checkIfDesktop);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', checkIfDesktop);
+    };
+  }, []);
   
   const handleChange = (field, selected) => {
     const newFilters = {
@@ -73,6 +92,7 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
       color: state.isSelected
         ? 'white'
         : isDark ? '#f9fafb' : '#1f2937',
+      fontFamily: 'inherit',
       '&:active': {
         backgroundColor: isDark ? '#4b5563' : '#e5e7eb',
       },
@@ -97,13 +117,20 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
     const selectedUnit = selectedFilters.unit?.[0];
     
     if (selectedBook && selectedUnit && topicNames && topicNames[selectedBook] && topicNames[selectedBook][selectedUnit]) {
-      return Object.keys(topicNames[selectedBook][selectedUnit]).map(topicId => ({
-        value: topicId,
-        label: `${topicId} - ${topicNames[selectedBook][selectedUnit][topicId]}`
-      }));
+      return Object.keys(topicNames[selectedBook][selectedUnit]).map(topicId => {
+        const topicName = topicNames[selectedBook][selectedUnit][topicId];
+        
+        return {
+          value: topicId,
+          label: (
+            <span>
+              {topicId} - <span className="dhivehi-text" lang="dv">{topicName}</span>
+            </span>
+          )
+        };
+      });
     }
     
-    // If no book/unit selected, return empty array (no topics to show)
     return [];
   };
 
@@ -145,10 +172,8 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
 
     // For types field, use custom ordering for filter display
     if (field === 'types') {
-      // Custom order for filter dropdown: Thaaraf, Dheyha, Mauloomaathu, Beynun Kurun, Haadhisaa, Dhiraasaa, Gina Marks
       const customOrder = [1, 2, 5, 7, 3, 6, 4];
       
-      // Filter to only include types that exist in available values, then sort by custom order
       return customOrder
         .filter(typeId => values.includes(typeId))
         .map(typeId => ({
@@ -251,7 +276,7 @@ const Filters = ({ options, selectedFilters, setSelectedFilters, onSearch, unitN
       
       {/* Filter Grid - Mobile: 1 column, Desktop: 7 columns */}
       <div className={`grid gap-3 transition-all duration-300 ${
-        isExpanded || window.innerWidth >= 1024 
+        isExpanded || isDesktop 
           ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-7' 
           : 'hidden lg:grid lg:grid-cols-7'
       }`}>

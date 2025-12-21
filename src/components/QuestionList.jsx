@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useTheme } from "../context/ThemeContext";
+import SmartText from '../components/SmartText';
 
 const QuestionList = ({ questions, selectedQuestionId, setSelectedQuestionId, unitNames, getTopicName, favorites, toggleFavorite }) => {
   const containerRef = useRef(null);
@@ -162,11 +163,11 @@ const QuestionList = ({ questions, selectedQuestionId, setSelectedQuestionId, un
                         <div className="font-semibold truncate">
                           {unitNames[q.unit] || `Unit ${q.unit}`}
                         </div>
-                        <div className={`text-xs mt-1 truncate ${
+                        <SmartText className={`text-xs mt-1 truncate ${
                           isDark ? "text-gray-400" : "text-gray-600"
-                        }`} style={{ fontFamily: 'Faruma, Arial' }}>
+                        }`}>
                           {getTopicName(q.book, q.unit, q.topic)}
-                        </div>
+                        </SmartText>
                         <div className={`font-mono text-xs mt-1 ${
                           isDark ? "text-gray-500" : "text-gray-500"
                         }`}>

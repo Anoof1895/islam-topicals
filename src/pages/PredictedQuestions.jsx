@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { topicNames, getTopicName } from "../topicNames";
 import Select from "react-select";
+import SmartText from '../components/SmartText';
 
 const PredictedQuestions = ({ predictedQuestions, unitNames, questionTypes, getTopicName: getTopicNameProp, onToggleFavorite, favorites }) => {
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
@@ -43,13 +44,23 @@ const PredictedQuestions = ({ predictedQuestions, unitNames, questionTypes, getT
     const selectedBook = selectedFilters.book?.[0];
     const selectedUnit = selectedFilters.unit?.[0];
     
-    if (selectedBook && selectedUnit && topicNames[selectedBook] && topicNames[selectedBook][selectedUnit]) {
-      return Object.keys(topicNames[selectedBook][selectedUnit]).map(topicId => ({
-        value: topicId,
-        label: `${topicId} - ${topicNames[selectedBook][selectedUnit][topicId]}`
-      }));
+    if (selectedBook && selectedUnit && topicNames && topicNames[selectedBook] && topicNames[selectedBook][selectedUnit]) {
+      return Object.keys(topicNames[selectedBook][selectedUnit]).map(topicId => {
+        const topicName = topicNames[selectedBook][selectedUnit][topicId];
+        
+        // Return a React element as label instead of string
+        return {
+          value: topicId,
+          label: (
+            <span>
+              {topicId} - <span className="dhivehi-text" lang="dv">{topicName}</span>
+            </span>
+          )
+        };
+      });
     }
     
+    // If no book/unit selected, return empty array (no topics to show)
     return [];
   };
 
@@ -175,6 +186,7 @@ const PredictedQuestions = ({ predictedQuestions, unitNames, questionTypes, getT
       color: state.isSelected
         ? 'white'
         : isDark ? '#f9fafb' : '#1f2937',
+      fontFamily: 'inherit', // Add this line - allows inner spans to use their own font
       '&:active': {
         backgroundColor: isDark ? '#4b5563' : '#e5e7eb',
       },
@@ -431,11 +443,11 @@ const PredictedQuestions = ({ predictedQuestions, unitNames, questionTypes, getT
                         <div className="font-semibold truncate text-sm lg:text-base">
                           {unitNames[q.unit] || `Unit ${q.unit}`}
                         </div>
-                        <div className={`text-xs mt-1 truncate ${
+                        <SmartText className={`text-xs mt-1 truncate ${
                           isDark ? "text-gray-400" : "text-gray-600"
-                        }`} style={{ fontFamily: 'Faruma, Arial' }}>
+                        }`}>
                           {getTopicName(q.book, q.unit, q.topic)}
-                        </div>
+                        </SmartText>
                         <div className={`font-mono text-xs mt-1 ${
                           isDark ? "text-gray-500" : "text-gray-500"
                         }`}>
@@ -803,12 +815,9 @@ const PredictedQuestions = ({ predictedQuestions, unitNames, questionTypes, getT
                 isDark ? 'bg-green-900' : 'bg-green-50'
               }`}>
                 <span className={`font-semibold ${isDark ? 'text-green-300' : 'text-green-700'}`}>Topic:</span>
-                <span 
-                  className={isDark ? 'text-green-100' : 'text-green-900'}
-                  style={{ fontFamily: 'Faruma, Arial' }}
-                >
+                <SmartText className={isDark ? 'text-green-100' : 'text-green-900'}>
                   {getTopicName(question.book, question.unit, question.topic)}
-                </span>
+                </SmartText>
               </div>
               <div className={`flex items-center gap-1 lg:gap-2 px-2 py-1 text-xs lg:text-sm rounded-full ${
                 isDark ? 'bg-yellow-900' : 'bg-yellow-50'

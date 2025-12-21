@@ -1,25 +1,46 @@
+/* 1. ALL @import statements MUST be at the very top */
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
 
-/* Import Faruma font support */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic&display=swap');
+/* 2. Then define @font-face */
+@font-face {
+  font-family: 'Faruma';
+  src: url('/fonts/Faruma.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 
-/* Fallback for Dhivehi text */
+/* 3. Set system font for English text by default */
 body {
-  font-family: 'Faruma', 'MV Typewriter', 'Noto Sans Arabic', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Ensure Dhivehi text uses Faruma */
-.dhivehi-text {
-  font-family: 'Faruma', 'MV Typewriter', 'Noto Sans Arabic', sans-serif;
+/* 4. Only apply Faruma to Dhivehi text elements */
+.dhivehi-text,
+[lang="dv"] {
+  font-family: 'Faruma', 'MV Typewriter', 'Noto Sans Arabic', sans-serif !important;
 }
-/* Image optimization for better display */
+
+/* 5. Ensure inputs and buttons use the same system font */
+input, 
+button, 
+textarea, 
+select {
+  font-family: inherit;
+}
+
+/* 6. Image optimization for better display */
 img {
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
   -ms-interpolation-mode: nearest-neighbor;
 }
 
-/* Better image scaling */
+/* 7. Better image scaling */
 @media (min-width: 1024px) {
   .image-container-lg {
     max-height: 75vh !important;
@@ -31,7 +52,7 @@ img {
   }
 }
 
-/* Print-friendly images */
+/* 8. Print-friendly images */
 @media print {
   img {
     max-width: 100% !important;
