@@ -420,7 +420,7 @@ const App = () => {
             <div className={`text-sm ${
               isDark ? 'text-gray-400' : 'text-gray-600'
             }`}>
-              2025 © islam-topicals.vercel.app
+              2026 © islam-topicals.vercel.app
             </div>
             <div className={`text-xs md:text-sm ${
               isDark ? 'text-gray-500' : 'text-gray-500'
