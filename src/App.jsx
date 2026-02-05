@@ -12,6 +12,7 @@ import PredictedQuestions from "./pages/PredictedQuestions";
 import Definitions from "./pages/Definitions";
 import { topicNames, getTopicName } from "./topicNames";
 import { useTheme } from "./context/ThemeContext";
+import { Analytics } from "@vercel/analytics/react";
 
 // Memoized components
 const MemoizedFilters = React.memo(Filters);
@@ -432,6 +433,7 @@ const App = () => {
           </div>
         </div>
       </footer>
+      <Analytics />
     </div>
   );
 };
