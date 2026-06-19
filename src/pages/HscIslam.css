@@ -1,0 +1,396 @@
+@font-face {
+  font-family: 'Faruma';
+  src: url('/fonts/Faruma.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Base Variables */
+:root {
+  --hsc-primary: #4f46e5;
+  --hsc-primary-hover: #4338ca;
+  --hsc-bg: #f8fafc;
+  --hsc-card-bg: #ffffff;
+  --hsc-border: #e2e8f0;
+  --hsc-text: #1e293b;
+  --hsc-text-light: #64748b;
+  --hsc-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --hsc-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --hsc-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --hsc-tab-bg: #f1f5f9;
+  --hsc-tab-text: #64748b;
+}
+
+html.dark {
+  --hsc-primary: #6366f1;
+  --hsc-primary-hover: #818cf8;
+  --hsc-bg: #0f172a;
+  --hsc-card-bg: #1e293b;
+  --hsc-border: #334155;
+  --hsc-text: #f8fafc;
+  --hsc-text-light: #94a3b8;
+  --hsc-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --hsc-shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+  --hsc-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  --hsc-tab-bg: #0f172a;
+  --hsc-tab-text: #94a3b8;
+}
+
+.hsc-container {
+  /* Set Faruma as the global default for this component */
+  font-family: 'Faruma', system-ui, -apple-system, sans-serif;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 1rem;
+}
+
+/* =========================================
+   Sleek Pill Tabs
+========================================= */
+.hsc-tabs-wrapper {
+  margin-bottom: 2.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.hsc-tabs {
+  display: inline-flex;
+  gap: 0.5rem;
+  background: var(--hsc-tab-bg);
+  padding: 0.5rem;
+  border-radius: 1rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.hsc-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.hsc-tab-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: var(--hsc-tab-text);
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  font-family: system-ui, -apple-system, sans-serif; /* English font for UI tabs */
+}
+
+.hsc-tab-btn:hover {
+  color: var(--hsc-text);
+  background: rgba(100, 116, 139, 0.1);
+}
+
+.hsc-tab-btn.active {
+  background: var(--hsc-primary);
+  color: #ffffff;
+  box-shadow: var(--hsc-shadow-sm);
+  transform: translateY(-1px);
+}
+
+/* =========================================
+   Modern Search Bar
+========================================= */
+.search-bar-container {
+  margin-bottom: 2.5rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hsc-search {
+  width: 100%;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid var(--hsc-border);
+  background: var(--hsc-card-bg);
+  color: var(--hsc-text);
+  font-size: 1.2rem;
+  font-family: 'Faruma', sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: var(--hsc-shadow-sm);
+}
+
+.hsc-search:focus {
+  outline: none;
+  border-color: var(--hsc-primary);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  transform: translateY(-2px);
+}
+
+/* =========================================
+   3D Flip Flashcards
+========================================= */
+.main-title {
+  color: var(--hsc-text);
+  font-size: 2.2rem;
+  margin-bottom: 2rem;
+  font-weight: bold;
+  text-align: right;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.flashcard-scene {
+  perspective: 1000px;
+  width: 100%;
+  min-height: 250px;
+  cursor: pointer;
+}
+
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.flashcard-scene:hover .flashcard-inner:not(.is-flipped) {
+  transform: translateY(-5px);
+}
+
+.flashcard-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 1.25rem;
+  padding: 2rem;
+  background: var(--hsc-card-bg);
+  border: 1px solid var(--hsc-border);
+  box-shadow: var(--hsc-shadow-md);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Front Face */
+.flashcard-front {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.card-content-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.topic-header {
+  margin: 0;
+  color: var(--hsc-text);
+  font-size: 1.6rem;
+  line-height: 1.5;
+  font-family: 'Faruma', sans-serif;
+}
+
+.click-prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--hsc-primary);
+  font-weight: bold;
+  background: rgba(99, 102, 241, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-family: system-ui, sans-serif; /* English font for the prompt */
+  font-size: 0.9rem;
+  transition: background 0.3s;
+}
+
+/* Back Face */
+.flashcard-back {
+  transform: rotateY(180deg);
+  background: var(--hsc-bg);
+  border: 2px solid var(--hsc-primary);
+  overflow-y: auto;
+  justify-content: flex-start;
+}
+
+.flashcard-back::-webkit-scrollbar {
+  width: 6px;
+}
+.flashcard-back::-webkit-scrollbar-thumb {
+  background-color: var(--hsc-border);
+  border-radius: 10px;
+}
+
+.back-title {
+  font-family: 'Faruma', sans-serif;
+  color: var(--hsc-text);
+}
+
+.back-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* EXPLICITLY set Faruma here to prevent English font overriding */
+.meaning-paragraph {
+  font-family: 'Faruma', system-ui, -apple-system, sans-serif;
+  color: var(--hsc-text);
+  line-height: 2;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+/* =========================================
+   Test Mode UI
+========================================= */
+.test-mode-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 0;
+  /* Removed the hardcoded system-ui font from here so Faruma inherits properly */
+}
+
+.test-title {
+  color: var(--hsc-text);
+  font-size: 2.5rem;
+  margin: 0 0 0.5rem 0;
+  font-weight: 800;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.test-instruction {
+  color: var(--hsc-text-light);
+  margin-bottom: 2.5rem;
+  font-size: 1.1rem;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.test-card {
+  background: var(--hsc-card-bg);
+  border: 2px solid var(--hsc-primary);
+  border-radius: 1.5rem;
+  padding: 4rem 3rem;
+  width: 100%;
+  max-width: 800px;
+  box-shadow: var(--hsc-shadow-hover);
+  position: relative;
+  overflow: hidden;
+}
+
+.test-topic {
+  color: var(--hsc-text);
+  font-size: 2.2rem;
+  margin-bottom: 3rem;
+  font-family: 'Faruma', sans-serif;
+  line-height: 1.5;
+}
+
+.reveal-btn {
+  padding: 1rem 3rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background: var(--hsc-primary);
+  color: white;
+  border: none;
+  border-radius: 3rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.39);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.reveal-btn:hover {
+  background: var(--hsc-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.self-grade-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 3rem;
+  border-top: 1px solid var(--hsc-border);
+  padding-top: 2.5rem;
+}
+
+.grade-btn {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 1rem;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.grade-btn:hover {
+  transform: scale(1.05);
+}
+
+.grade-btn.hard { background: #fee2e2; color: #991b1b; }
+.grade-btn.good { background: #fef3c7; color: #92400e; }
+.grade-btn.easy { background: #dcfce3; color: #166534; }
+
+html.dark .grade-btn.hard { background: #7f1d1d; color: #fca5a5; }
+html.dark .grade-btn.good { background: #78350f; color: #fcd34d; }
+html.dark .grade-btn.easy { background: #14532d; color: #86efac; }
+
+/* Utilities */
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 6rem 2rem;
+  background: var(--hsc-card-bg);
+  border: 2px dashed var(--hsc-border);
+  border-radius: 1.5rem;
+  color: var(--hsc-text-light);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.empty-state h2 {
+  color: var(--hsc-text);
+  margin-bottom: 0.5rem;
+  font-size: 1.8rem;
+}
+
+/* Textbook action button */
+.action-btn {
+  display: inline-block;
+  background: var(--hsc-primary);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background 0.2s;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.action-btn:hover {
+  background: var(--hsc-primary-hover);
+}
