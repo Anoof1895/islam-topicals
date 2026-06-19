@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-const Flashcard = ({ topic }) => {
-  const [isRevealed, setIsRevealed] = useState(false);
-
+const Flashcard = ({ topic, isFlipped, onFlip }) => {
   return (
-    <div className="flashcard-scene" onClick={() => setIsRevealed(!isRevealed)}>
-      <div className={`flashcard-inner ${isRevealed ? 'is-flipped' : ''}`}>
+    <div className="flashcard-scene" onClick={onFlip}>
+      <div className={`flashcard-inner ${isFlipped ? 'is-flipped' : ''}`}>
         
         {/* FRONT OF CARD */}
         <div className="flashcard-face flashcard-front">
@@ -13,7 +11,7 @@ const Flashcard = ({ topic }) => {
             <h3 className="topic-header">{topic.topicTitle}</h3>
             <div className="click-prompt">
               <span className="icon text-xl">🔄</span> 
-              <span>Click to flip</span>
+              <span>Click or press Space to flip</span>
             </div>
           </div>
         </div>
