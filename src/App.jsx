@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
+import { Analytics } from "@vercel/analytics/next"
 import allQuestions from "./questionsData";
 import predictedQuestions from "./predictedQuestionsData";
 import definitionsData from "./definitionsData";
@@ -13,7 +14,7 @@ import Definitions from "./pages/Definitions";
 import { topicNames, getTopicName } from "./topicNames";
 import { useTheme } from "./context/ThemeContext";
 import HscIslam from './pages/HscIslam'; 
-import { Analytics } from "@vercel/analytics/next"
+
 
 // Memoized components
 const MemoizedFilters = React.memo(Filters);
@@ -499,6 +500,7 @@ const App = () => {
           </div>
         </div>
       </footer>
+      <Analytics />
     </div>
   );
 };
