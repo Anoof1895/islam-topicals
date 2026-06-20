@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 import allQuestions from "./questionsData";
 import predictedQuestions from "./predictedQuestionsData";
 import definitionsData from "./definitionsData";
