@@ -2,22 +2,31 @@ import React, { useState, useMemo, useEffect } from 'react';
 import './HscIslam.css';
 import { hscModulesData } from '../hscModulesData';
 
-// Component for Definition Flashcards (For Active Recall)
+const cleanText = (str) => {
+  if (typeof str !== 'string') return str;
+  return str
+    .replace(/\]*\]/gi, '') 
+    .replace(/【[^】]*】/g, '')       
+    .replace(/\[\d+\]/g, '')          
+    .replace(/\|/g, '')               
+    .trim();
+};
+
 const Flashcard = ({ term, paragraphs }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   
-  useEffect(() => setIsFlipped(false), [term]); // Reset on new topic
+  useEffect(() => setIsFlipped(false), [term]); 
 
   return (
     <div className="flashcard-scene" onClick={() => setIsFlipped(!isFlipped)}>
       <div className={`flashcard-inner ${isFlipped ? 'is-flipped' : ''}`}>
         <div className="flashcard-face flashcard-front">
-          <h3 className="topic-title" dir="rtl">{term}</h3>
+          <h3 className="topic-title" dir="rtl">{cleanText(term)}</h3>
           <span className="click-prompt">Click to flip</span>
         </div>
         <div className="flashcard-face flashcard-back" dir="rtl">
           {paragraphs.map((paragraph, idx) => (
-            <p key={idx} className="meaning-paragraph">{paragraph}</p>
+            <p key={idx} className="meaning-paragraph">{cleanText(paragraph)}</p>
           ))}
         </div>
       </div>
@@ -25,7 +34,6 @@ const Flashcard = ({ term, paragraphs }) => {
   );
 };
 
-// Component for Definitions (Blue Theme Accordion)
 const AccordionCard = ({ term, paragraphs }) => {
   const [isOpen, setIsOpen] = useState(false);
   
@@ -36,14 +44,14 @@ const AccordionCard = ({ term, paragraphs }) => {
       <button className="accordion-header" onClick={() => setIsOpen(!isOpen)} dir="rtl">
         <div className="title-wrapper">
           <span className="badge def-badge">تعريف</span>
-          <h3 className="topic-title">{term}</h3>
+          <h3 className="topic-title">{cleanText(term)}</h3>
         </div>
         <span className="accordion-icon">{isOpen ? '−' : '+'}</span>
       </button>
       {isOpen && (
         <div className="accordion-content animate-slide-down" dir="rtl">
           {paragraphs.map((paragraph, idx) => (
-            <p key={idx} className="meaning-paragraph">{paragraph}</p>
+            <p key={idx} className="meaning-paragraph">{cleanText(paragraph)}</p>
           ))}
         </div>
       )}
@@ -51,7 +59,6 @@ const AccordionCard = ({ term, paragraphs }) => {
   );
 };
 
-// Component for Key Points & Lists (Green Theme Accordion)
 const ListCard = ({ heading, points }) => {
   const [isOpen, setIsOpen] = useState(false);
   
@@ -62,7 +69,7 @@ const ListCard = ({ heading, points }) => {
       <button className="accordion-header list-header" onClick={() => setIsOpen(!isOpen)} dir="rtl">
         <div className="title-wrapper">
           <span className="badge list-badge">ނުކުތާ</span>
-          <h3 className="topic-title list-title">{heading}</h3>
+          <h3 className="topic-title list-title">{cleanText(heading)}</h3>
         </div>
         <span className="accordion-icon">{isOpen ? '−' : '+'}</span>
       </button>
@@ -70,7 +77,7 @@ const ListCard = ({ heading, points }) => {
         <div className="accordion-content animate-slide-down" dir="rtl">
           <ul className="hsc-bullet-list">
             {points.map((point, idx) => (
-              <li key={idx} className="meaning-paragraph">{point}</li>
+              <li key={idx} className="meaning-paragraph">{cleanText(point)}</li>
             ))}
           </ul>
         </div>
@@ -85,8 +92,7 @@ export default function HscIslam() {
   const [activeTopicTitle, setActiveTopicTitle] = useState("");
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   
-  // New States for Progress & View Mode
-  const [viewMode, setViewMode] = useState('notes'); // 'notes' or 'flashcards'
+  const [viewMode, setViewMode] = useState('notes'); 
   const [masteredTopics, setMasteredTopics] = useState(() => {
     const saved = localStorage.getItem('hscMasteredTopics');
     return saved ? JSON.parse(saved) : [];
@@ -183,7 +189,7 @@ export default function HscIslam() {
                   ތިޔަދަރިވަރުންނަށް އެނގޭތަ!
                 </div>
                 <div className="textbook-fact-body">
-                  {facts[currentFactIndex]}
+                  {cleanText(facts[currentFactIndex])}
                 </div>
               </div>
             </div>
@@ -209,7 +215,6 @@ export default function HscIslam() {
     const activeTopicData = displayedTopics.find(t => t.topicTitle === activeTopicTitle);
     const isMastered = masteredTopics.includes(activeTopicTitle);
     
-    // Progress calculation
     const moduleTopics = moduleInfo.topics;
     const masteredInModule = moduleTopics.filter(t => masteredTopics.includes(t.topicTitle)).length;
     const progressPercent = Math.round((masteredInModule / moduleTopics.length) * 100) || 0;
@@ -228,14 +233,12 @@ export default function HscIslam() {
         </div>
         
         <div className="module-layout">
-          {/* Sidebar */}
           <aside className="topic-sidebar" dir="rtl">
             <div className="sidebar-header font-sans" dir="ltr">
               <span className="sidebar-title">Syllabus Topics</span>
               <span className="topic-count">{displayedTopics.length}</span>
             </div>
             
-            {/* Progress Bar inside Sidebar */}
             <div className="sidebar-progress" dir="ltr">
               <div className="progress-text font-sans">
                 <span>Mastery Progress</span>
@@ -247,44 +250,42 @@ export default function HscIslam() {
             </div>
 
             <div className="sidebar-scroll-area">
-              {displayedTopics.map((topic, index) => {
-                const mastered = masteredTopics.includes(topic.topicTitle);
-                return (
-                  <button 
-                    key={index}
-                    className={`sidebar-btn ${activeTopicTitle === topic.topicTitle ? 'active' : ''} ${mastered ? 'mastered' : ''}`}
-                    onClick={() => {
-                      setActiveTopicTitle(topic.topicTitle);
-                      window.scrollTo({ top: 0, behavior: 'smooth' }); 
-                    }}
-                  >
-                    <span className="sidebar-icon">{mastered ? '✅' : '📘'}</span>
-                    <span className="sidebar-text">{topic.topicTitle}</span>
-                  </button>
-                );
-              })}
-              {displayedTopics.length === 0 && <p className="no-results font-sans">No content found.</p>}
+              <div className="sidebar-scroll-inner">
+                {displayedTopics.map((topic, index) => {
+                  const mastered = masteredTopics.includes(topic.topicTitle);
+                  return (
+                    <button 
+                      key={index}
+                      className={`sidebar-btn ${activeTopicTitle === topic.topicTitle ? 'active' : ''} ${mastered ? 'mastered' : ''}`}
+                      onClick={() => {
+                        setActiveTopicTitle(topic.topicTitle);
+                        window.scrollTo({ top: 0, behavior: 'smooth' }); 
+                      }}
+                    >
+                      <span className="sidebar-icon">{mastered ? '✅' : '📘'}</span>
+                      <span className="sidebar-text">{cleanText(topic.topicTitle)}</span>
+                    </button>
+                  );
+                })}
+                {displayedTopics.length === 0 && <p className="no-results font-sans">No content found.</p>}
+              </div>
             </div>
           </aside>
 
-          {/* Main Content Area */}
           <section className="topic-content-area">
             {activeTopicData ? (
               <div className="animate-fade-in">
                 
                 <div className="content-header-row">
-                  {/* View Mode Toggle */}
                   <div className="view-toggle font-sans" dir="ltr">
                     <button className={viewMode === 'notes' ? 'active' : ''} onClick={() => setViewMode('notes')}>📝 Notes</button>
                     <button className={viewMode === 'flashcards' ? 'active' : ''} onClick={() => setViewMode('flashcards')}>🎴 Flashcards</button>
                   </div>
-                  
-                  <h2 className="content-area-title" dir="rtl">{activeTopicData.topicTitle}</h2>
+                  <h2 className="content-area-title" dir="rtl">{cleanText(activeTopicData.topicTitle)}</h2>
                 </div>
                 
                 <div className="accordion-stack">
                   
-                  {/* Flashcard Mode */}
                   {viewMode === 'flashcards' && (
                     <div className="flashcard-grid">
                       {activeTopicData.definitions?.length > 0 ? (
@@ -297,7 +298,6 @@ export default function HscIslam() {
                     </div>
                   )}
 
-                  {/* Notes Mode */}
                   {viewMode === 'notes' && (
                     <>
                       {activeTopicData.keyPoints && activeTopicData.keyPoints.length > 0 && (
@@ -323,7 +323,6 @@ export default function HscIslam() {
                   )}
                 </div>
 
-                {/* Mark as Mastered Button */}
                 <div className="mastery-footer font-sans">
                   <button 
                     className={`mastery-btn ${isMastered ? 'is-mastered' : ''}`}
