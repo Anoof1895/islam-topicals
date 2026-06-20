@@ -13,6 +13,7 @@ import Definitions from "./pages/Definitions";
 import { topicNames, getTopicName } from "./topicNames";
 import { useTheme } from "./context/ThemeContext";
 import HscIslam from './pages/HscIslam'; 
+import { Analytics } from "@vercel/analytics/next"
 
 // Memoized components
 const MemoizedFilters = React.memo(Filters);
