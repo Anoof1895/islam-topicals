@@ -1,27 +1,25 @@
-// src/components/SmartText.jsx
 import React from 'react';
 
-const SmartText = ({ 
-  children, 
-  className = '', 
-  as: Component = 'span',
-  ...props 
+const SmartText = ({
+  children,
+  className = '',
+  as = 'span',
+  ...props
 }) => {
-  // Convert children to string for checking
+  const Tag = as;
   const text = typeof children === 'string' ? children : '';
-  
-  // Check for Dhivehi characters
   const isDhivehi = /[\u0780-\u07BF]/.test(text);
   const lang = isDhivehi ? 'dv' : 'en';
-  
+
   return (
-    <Component 
+    <Tag
       lang={lang}
-      className={`${isDhivehi ? 'dhivehi-text' : ''} ${className}`}
+      dir={isDhivehi ? 'rtl' : undefined}
+      className={`${isDhivehi ? 'dhivehi-text' : ''} ${className}`.trim()}
       {...props}
     >
       {children}
-    </Component>
+    </Tag>
   );
 };
 

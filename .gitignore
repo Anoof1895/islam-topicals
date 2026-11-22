@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Large PDFs (>100 MB GitHub limit)
+public/pdfs/Islam Grade 12 SB.pdf

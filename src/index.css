@@ -1,8 +1,7 @@
-/* 1. ALL @import statements MUST be at the very top */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
+@custom-variant dark (&:where(.dark, .dark *));
 
-/* 2. Then define @font-face */
 @font-face {
   font-family: 'Faruma';
   src: url('/fonts/Faruma.ttf') format('truetype');
@@ -11,52 +10,213 @@
   font-display: swap;
 }
 
-/* 3. Set system font for English text by default */
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+:root {
+  --bg-canvas: #FBF9F5;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F4F0EA;
+  --bg-elevated: #FAF7F0;
+  --text-primary: #141E1B;
+  --text-secondary: #52605B;
+  --text-muted: #84928D;
+  --accent-primary: #0F5F4C;
+  --accent-primary-hover: #0B4A3B;
+  --accent-primary-soft: #E6F2EE;
+  --accent-gold: #C48B28;
+  --accent-gold-soft: #FDF6E7;
+  --border-hairline: #E4DFD7;
+  --border-strong: #D1C9BC;
+  --shadow-card: 0 1px 2px rgba(20, 30, 27, 0.04), 0 4px 14px rgba(20, 30, 27, 0.04);
+  --shadow-elevated: 0 12px 32px -8px rgba(20, 30, 27, 0.12), 0 2px 6px rgba(20, 30, 27, 0.04);
 }
 
-/* 4. Only apply Faruma to Dhivehi text elements */
+html.dark {
+  --bg-canvas: #0A100E;
+  --bg-surface: #111A17;
+  --bg-subtle: #17231F;
+  --bg-elevated: #1D2B26;
+  --text-primary: #EFECE6;
+  --text-secondary: #9AA8A3;
+  --text-muted: #687973;
+  --accent-primary: #10B981;
+  --accent-primary-hover: #34D399;
+  --accent-primary-soft: rgba(16, 185, 129, 0.14);
+  --accent-gold: #F59E0B;
+  --accent-gold-soft: rgba(245, 158, 11, 0.14);
+  --border-hairline: #1F2E29;
+  --border-strong: #2C4039;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.25), 0 4px 14px rgba(0, 0, 0, 0.2);
+  --shadow-elevated: 0 16px 36px -8px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+html {
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.font-serif-editorial {
+  font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
+}
+
+.font-sans-ui {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-mono-code {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Dhivehi / Thaana typography with optical scale & breathing room for fili diacritics */
 .dhivehi-text,
 [lang="dv"] {
   font-family: 'Faruma', 'MV Typewriter', 'Noto Sans Arabic', sans-serif !important;
+  line-height: 2.15;
+  letter-spacing: 0;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
-/* 5. Ensure inputs and buttons use the same system font */
-input, 
-button, 
-textarea, 
+.arabic-text {
+  font-family: 'Noto Sans Arabic', 'Traditional Arabic', serif;
+  line-height: 1.9;
+}
+
+input,
+button,
+textarea,
 select {
   font-family: inherit;
 }
 
-/* 6. Image optimization for better display */
-img {
+/* Subtle Islamic geometric lattice background */
+.bg-islamic-lattice {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%230F5F4C' stroke-opacity='0.055' stroke-width='1'%3E%3Cpath d='M32 4 L40 24 L60 32 L40 40 L32 60 L24 40 L4 32 L24 24 Z'/%3E%3Crect x='18' y='18' width='28' height='28'/%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+html.dark .bg-islamic-lattice {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%2310B981' stroke-opacity='0.065' stroke-width='1'%3E%3Cpath d='M32 4 L40 24 L60 32 L40 40 L32 60 L24 40 L4 32 L24 24 Z'/%3E%3Crect x='18' y='18' width='28' height='28'/%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Document Scan Stage */
+.scan-stage-ivory {
+  background-color: #FAF7F0;
+}
+
+.scan-stage-dark {
+  background-color: #131B18;
+}
+
+.scan-invert {
+  filter: invert(0.91) hue-rotate(180deg) contrast(1.06) brightness(0.97);
+}
+
+/* Image clarity for past paper scans */
+img.exam-scan-img {
   image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-  -ms-interpolation-mode: nearest-neighbor;
 }
 
-/* 7. Better image scaling */
-@media (min-width: 1024px) {
-  .image-container-lg {
-    max-height: 75vh !important;
+/* Custom thin scholarly scrollbars */
+.scholar-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scholar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scholar-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border-radius: 9999px;
+}
+
+.scholar-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-muted);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* 3D Flashcard Flip */
+.perspective-1000 {
+  perspective: 1100px;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Animations */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-  
-  .image-content-lg {
-    max-width: 90% !important;
-    max-height: 70vh !important;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* 8. Print-friendly images */
+.animate-fade-up {
+  animation: fadeSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes drawerSlideLeft {
+  from {
+    opacity: 1;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-drawer-left {
+  animation: drawerSlideLeft 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes drawerSlideUp {
+  from {
+    opacity: 1;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-drawer-up {
+  animation: drawerSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Print optimization */
 @media print {
   img {
     max-width: 100% !important;
     max-height: none !important;
     page-break-inside: avoid;
+    filter: none !important;
   }
 }
