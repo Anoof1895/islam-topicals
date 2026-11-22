@@ -1,265 +1,290 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useTheme } from "../context/ThemeContext";
-import SmartText from '../components/SmartText';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import SmartText from './SmartText';
+import { hasSavedNote } from '../utils/noteUtils';
+import { ChevronLeftIcon, ChevronRightIcon, NoteIcon, StarIcon, BookOpenIcon } from './Icons';
 
-const QuestionList = ({ questions, selectedQuestionId, setSelectedQuestionId, unitNames, getTopicName, favorites, toggleFavorite }) => {
+const QuestionList = ({
+  questions,
+  selectedQuestionId,
+  setSelectedQuestionId,
+  unitNames,
+  getTopicName,
+  favorites,
+  toggleFavorite,
+  showFavorites: controlledShowFavorites,
+  setShowFavorites: setControlledShowFavorites,
+  noteVersion = 0,
+}) => {
   const containerRef = useRef(null);
   const itemRefs = useRef({});
-  const { isDark } = useTheme();
-  
-  // Pagination state
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [showFavorites, setShowFavorites] = useState(false);
+  const [internalShowFavorites, setInternalShowFavorites] = useState(false);
+  const showFavorites = controlledShowFavorites !== undefined ? controlledShowFavorites : internalShowFavorites;
+  const setShowFavorites = setControlledShowFavorites || setInternalShowFavorites;
+
   const questionsPerPage = 10;
 
-  // Reset to page 1 when questions change significantly
+  const favMatchesCount = useMemo(
+    () => questions.filter(q => favorites.includes(q.id)).length,
+    [questions, favorites]
+  );
+
+  const questionsToDisplay = useMemo(
+    () => (showFavorites ? questions.filter(q => favorites.includes(q.id)) : questions),
+    [showFavorites, questions, favorites]
+  );
+
   useEffect(() => {
     setCurrentPage(1);
   }, [questions.length, showFavorites]);
 
-  // Get questions to display (all or favorites)
-  const questionsToDisplay = showFavorites 
-    ? questions.filter(q => favorites.includes(q.id))
-    : questions;
+  // If selectedQuestionId changes externally (e.g. Next/Prev), sync page to keep it visible
+  useEffect(() => {
+    if (!selectedQuestionId) return;
+    const idx = questionsToDisplay.findIndex(q => Number(q.id) === Number(selectedQuestionId));
+    if (idx !== -1) {
+      const targetPage = Math.floor(idx / questionsPerPage) + 1;
+      if (targetPage !== currentPage) {
+        setCurrentPage(targetPage);
+      }
+    }
+  }, [selectedQuestionId, questionsToDisplay, currentPage]);
 
-  // Calculate pagination
-  const totalPages = Math.ceil(questionsToDisplay.length / questionsPerPage);
-  const startIndex = (currentPage - 1) * questionsPerPage;
-  const endIndex = startIndex + questionsPerPage;
-  const currentQuestions = questionsToDisplay.slice(startIndex, endIndex);
-
-  const getQuestionDisplayText = (q) => {
-    const unitName = unitNames[q.unit] || `Unit ${q.unit}`;
-    const topicName = getTopicName(q.book, q.unit, q.topic);
-    return `${q.year}_Paper${q.paper}_Book${q.book}_${unitName}_${topicName}_Q${q.questionNumber}`;
-  };
+  const totalPages = Math.max(1, Math.ceil(questionsToDisplay.length / questionsPerPage));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIndex = (safePage - 1) * questionsPerPage;
+  const currentQuestions = questionsToDisplay.slice(startIndex, startIndex + questionsPerPage);
 
   const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
+    if (safePage < totalPages) {
+      setCurrentPage(safePage + 1);
+      containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const goToPrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+    if (safePage > 1) {
+      setCurrentPage(safePage - 1);
+      containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   return (
-    <div className={`rounded-xl shadow-lg border-2 h-full overflow-hidden flex flex-col transition-colors duration-300 ${
-      isDark ? 'bg-gray-800 border-blue-900' : 'bg-white border-blue-200'
-    }`}>
-      {/* Header */}
-      <div className={`p-4 lg:p-5 border-b rounded-t-xl transition-colors duration-300 ${
-        isDark 
-          ? 'border-blue-900 bg-gradient-to-r from-blue-900 to-indigo-900/30' 
-          : 'border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50/30'
-      }`}>
-        <div className="flex items-center justify-between mb-3">
+    <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] h-full overflow-hidden flex flex-col">
+      {/* Header + Segmented Toggle */}
+      <div className="p-3.5 border-b border-[var(--border-hairline)] bg-[var(--bg-subtle)]/45 space-y-3">
+        <div className="flex items-center justify-between gap-2">
           <div>
-            <h3 className="font-bold text-lg">Questions</h3>
-            <p className={`text-sm mt-1 ${
-              isDark ? 'text-gray-400' : 'text-gray-600'
-            }`}>
-              Page {currentPage} of {totalPages} • {questionsToDisplay.length} {showFavorites ? 'favorites' : 'total'}
+            <h3 className="font-serif-editorial font-semibold text-base text-[var(--text-primary)] leading-tight">
+              Past Paper Questions
+            </h3>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5 font-mono-code">
+              {questionsToDisplay.length === 0
+                ? '0 items'
+                : `Page ${safePage}/${totalPages} • ${questionsToDisplay.length} items`}
             </p>
           </div>
-          <div className={`bg-gradient-to-r px-3 py-1 rounded-full text-sm font-semibold shadow-sm ${
-            isDark 
-              ? 'from-blue-800 to-blue-900 text-blue-200' 
-              : 'from-blue-100 to-blue-200 text-blue-800'
-          }`}>
+          <span className="font-mono-code text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--accent-primary-soft)] text-[var(--accent-primary)]">
             {questionsToDisplay.length}
-          </div>
+          </span>
         </div>
-        
-        {/* Favorites Toggle */}
-        <button
-          onClick={() => setShowFavorites(!showFavorites)}
-          className={`w-full px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm border min-h-[44px] ${
-            showFavorites
-              ? isDark
-                ? "bg-yellow-900 text-yellow-200 border-yellow-700"
-                : "bg-yellow-100 text-yellow-700 border-yellow-300"
-              : isDark
-                ? "bg-gray-700 text-gray-200 border-gray-600 hover:bg-gray-600"
-                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-          }`}
-        >
-          {showFavorites ? `★ Showing Favorites (${favorites.length})` : "☆ Show Favorites"}
-        </button>
+
+        {/* All vs Favorites Segmented Control */}
+        <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)]">
+          <button
+            type="button"
+            onClick={() => setShowFavorites(false)}
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              !showFavorites
+                ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-2xs'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            }`}
+          >
+            All ({questions.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowFavorites(true)}
+            className={`inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              showFavorites
+                ? 'bg-[var(--accent-gold-soft)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/25 shadow-2xs'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            }`}
+          >
+            <StarIcon className="w-3.5 h-3.5" filled={showFavorites} />
+            <span>Saved ({favMatchesCount})</span>
+          </button>
+        </div>
       </div>
-      
-      {/* List */}
+
+      {/* Scrollable Question Cards */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto"
-        style={{
-          WebkitOverflowScrolling: 'touch',
-          touchAction: 'manipulation'
-        }}
+        className="flex-1 overflow-y-auto p-2.5 space-y-2 scholar-scroll"
+        style={{ WebkitOverflowScrolling: 'touch', touchAction: 'manipulation' }}
       >
         {currentQuestions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-inner ${
-              isDark ? 'bg-gray-700' : 'bg-gradient-to-br from-gray-100 to-blue-100'
-            }`}>
+          <div className="flex flex-col items-center justify-center py-12 px-5 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-[var(--bg-subtle)] text-[var(--text-muted)] flex items-center justify-center mb-3">
               {showFavorites ? (
-                <svg className="w-8 h-8 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                </svg>
+                <StarIcon className="w-6 h-6 text-[var(--accent-gold)]" filled />
               ) : (
-                <svg className={`w-8 h-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+                <BookOpenIcon className="w-6 h-6" />
               )}
             </div>
-            <h4 className={`text-lg font-semibold mb-2 ${
-              isDark ? 'text-gray-300' : 'text-gray-900'
-            }`}>
-              {showFavorites ? "No Favorite Questions" : "No questions found"}
+            <h4 className="font-serif-editorial text-base font-semibold text-[var(--text-primary)] mb-1">
+              {showFavorites ? 'No Saved Questions' : 'No Questions Found'}
             </h4>
-            <p className={`text-sm ${
-              isDark ? 'text-gray-500' : 'text-gray-500'
-            }`}>
-              {showFavorites 
-                ? "Click the star icon on questions to add them to favorites" 
-                : "Try adjusting your filters to see more results"}
+            <p className="text-xs text-[var(--text-secondary)] max-w-[220px] leading-relaxed">
+              {showFavorites
+                ? 'Star any question while studying to bookmark it here.'
+                : 'Try adjusting your active filter criteria to broaden results.'}
             </p>
           </div>
         ) : (
-          <div className="p-2 lg:p-3">
-            {currentQuestions.map((q) => {
-              const isSelected = Number(selectedQuestionId) === Number(q.id);
-              const isFavorite = favorites.includes(q.id);
-              return (
-                <div
-                  key={q.id}
-                  ref={(el) => (itemRefs.current[q.id] = el)}
-                  onClick={() => setSelectedQuestionId(q.id)}
-                  className={`cursor-pointer p-3 lg:p-4 mb-2 lg:mb-3 rounded-xl transition-all duration-200 border-2 shadow-sm min-h-[80px] flex items-center ${
-                    isSelected 
-                      ? isDark
-                        ? "bg-gradient-to-r from-blue-900 to-indigo-900 border-blue-700 shadow-md"
-                        : "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-300 shadow-md"
-                      : isDark
-                        ? "bg-gray-700 border-gray-600 hover:border-blue-700 hover:shadow-md"
-                        : "bg-white border-gray-200 hover:border-blue-200 hover:shadow-md"
-                  }`}
-                >
-                  <div className="flex items-start justify-between w-full">
-                    <div className="flex-1 min-w-0">
-                      <div className={`text-sm leading-relaxed ${
-                        isSelected 
-                          ? isDark ? "text-blue-100" : "text-blue-800"
-                          : isDark ? "text-gray-300" : "text-gray-800"
-                      }`}>
-                        <div className={`font-mono text-xs mb-1 ${
-                          isDark ? "text-gray-500" : "text-gray-500"
-                        }`}>
-                          {q.year}_Paper{q.paper}_Book{q.book}
-                        </div>
-                        <div className="font-semibold truncate">
-                          {unitNames[q.unit] || `Unit ${q.unit}`}
-                        </div>
-                        <SmartText className={`text-xs mt-1 truncate ${
-                          isDark ? "text-gray-400" : "text-gray-600"
-                        }`}>
-                          {getTopicName(q.book, q.unit, q.topic)}
-                        </SmartText>
-                        <div className={`font-mono text-xs mt-1 ${
-                          isDark ? "text-gray-500" : "text-gray-500"
-                        }`}>
-                          Q{q.questionNumber}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-2 ml-3 flex-shrink-0">
-                      {isSelected && (
-                        <div className={`w-3 h-3 rounded-full animate-pulse ${
-                          isDark 
-                            ? "bg-gradient-to-r from-blue-400 to-indigo-400"
-                            : "bg-gradient-to-r from-blue-500 to-indigo-600"
-                        }`}></div>
-                      )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(q.id);
-                        }}
-                        className={`p-1 rounded-full transition-colors ${
-                          isFavorite 
-                            ? "text-yellow-500 hover:text-yellow-400" 
-                            : isDark 
-                              ? "text-gray-500 hover:text-yellow-500" 
-                              : "text-gray-400 hover:text-yellow-500"
+          currentQuestions.map((q) => {
+            const isSelected = Number(selectedQuestionId) === Number(q.id);
+            const isFavorite = favorites.includes(q.id);
+            const isSpecimen = (q.year === 2021 && q.paperSet === 2) || (q.year === 2020 && q.paperSet === 1);
+            const hasNote = hasSavedNote(`question_notes_${q.id}`);
+            // Read noteVersion to keep lint happy and ensure live re-evaluation
+            void noteVersion;
+
+            return (
+              <div
+                key={q.id}
+                ref={(el) => (itemRefs.current[q.id] = el)}
+                onClick={() => setSelectedQuestionId(q.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedQuestionId(q.id);
+                  }
+                }}
+                className={`group relative cursor-pointer p-3 rounded-xl border transition-all duration-150 ${
+                  isSelected
+                    ? 'bg-[var(--accent-primary-soft)] border-[var(--accent-primary)] shadow-xs'
+                    : 'bg-[var(--bg-surface)] border-[var(--border-hairline)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-subtle)]/40'
+                }`}
+              >
+                {/* Active vertical indicator */}
+                {isSelected && (
+                  <span className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-[var(--accent-primary)]" />
+                )}
+
+                <div className="flex items-start justify-between gap-2.5 pl-1">
+                  <div className="flex-1 min-w-0">
+                    {/* Meta row */}
+                    <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                      <span
+                        className={`font-mono-code text-[11px] font-semibold px-1.5 py-0.5 rounded-md ${
+                          isSelected
+                            ? 'bg-[var(--accent-primary)] text-white'
+                            : 'bg-[var(--bg-subtle)] text-[var(--text-primary)]'
                         }`}
                       >
-                        <svg className="w-4 h-4" fill={isFavorite ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                        </svg>
-                      </button>
+                        Q{q.questionNumber}
+                      </span>
+                      <span className="font-mono-code text-[11px] text-[var(--text-secondary)]">
+                        {q.year} • P{q.paper} • B{q.book}
+                      </span>
+                      {isSpecimen && (
+                        <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[var(--accent-gold-soft)] text-[var(--accent-gold)]">
+                          Specimen
+                        </span>
+                      )}
                     </div>
+
+                    {/* Unit name */}
+                    <div className="text-xs font-bold text-[var(--accent-primary)] mb-0.5">
+                      Unit {q.unit}: {unitNames[q.unit] || `Unit ${q.unit}`}
+                    </div>
+
+                    {/* Dhivehi Topic */}
+                    <SmartText
+                      as="div"
+                      className="text-[13px] text-[var(--text-primary)] leading-[1.9] line-clamp-2 text-right w-full"
+                    >
+                      {getTopicName(q.book, q.unit, q.topic)}
+                    </SmartText>
+                  </div>
+
+                  {/* Right Actions */}
+                  <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(q.id);
+                      }}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        isFavorite
+                          ? 'text-[var(--accent-gold)] bg-[var(--accent-gold-soft)]'
+                          : 'text-[var(--text-muted)] hover:text-[var(--accent-gold)] hover:bg-[var(--bg-subtle)]'
+                      }`}
+                      title={isFavorite ? 'Remove favorite' : 'Add to favorites'}
+                    >
+                      <StarIcon className="w-4 h-4" filled={isFavorite} />
+                    </button>
+                    {hasNote && (
+                      <span
+                        className="p-1 text-[var(--accent-primary)]"
+                        title="Has personal notes"
+                      >
+                        <NoteIcon className="w-3.5 h-3.5" />
+                      </span>
+                    )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })
         )}
       </div>
 
-      {/* Pagination Controls */}
+      {/* Pagination Bar */}
       {totalPages > 1 && (
-        <div className={`flex-shrink-0 p-3 lg:p-4 border-t transition-colors duration-300 ${
-          isDark 
-            ? 'border-blue-900 bg-gradient-to-r from-blue-900 to-indigo-900/30' 
-            : 'border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50/30'
-        }`}>
-          <div className="flex items-center justify-between">
-            <button
-              onClick={goToPrevPage}
-              disabled={currentPage === 1}
-              className={`flex items-center gap-1 lg:gap-2 px-3 lg:px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] ${
-                isDark
-                  ? 'bg-gray-700 text-gray-200 border border-gray-600 hover:bg-gray-600'
-                  : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              <span className="hidden sm:inline">Previous</span>
-            </button>
-            
-            <div className={`flex items-center gap-1 lg:gap-2 text-sm ${
-              isDark ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              <span className="font-semibold hidden sm:inline">Page</span>
-              <span className={`border rounded-lg px-2 lg:px-3 py-1 font-mono text-xs ${
-                isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
-              }`}>
-                {currentPage}
-              </span>
-              <span className="font-semibold">of</span>
-              <span className="font-mono text-xs">{totalPages}</span>
-            </div>
+        <div className="flex-shrink-0 px-3 py-2.5 border-t border-[var(--border-hairline)] bg-[var(--bg-subtle)]/45 flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={goToPrevPage}
+            disabled={safePage === 1}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--border-strong)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeftIcon className="w-4 h-4" />
+            <span className="hidden sm:inline">Prev</span>
+          </button>
 
-            <button
-              onClick={goToNextPage}
-              disabled={currentPage === totalPages}
-              className={`flex items-center gap-1 lg:gap-2 px-3 lg:px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] ${
-                isDark
-                  ? 'bg-gray-700 text-gray-200 border border-gray-600 hover:bg-gray-600'
-                  : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-              }`}
+          <div className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)]">
+            <select
+              aria-label="Select page"
+              value={safePage}
+              onChange={(e) => {
+                setCurrentPage(Number(e.target.value));
+                containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="font-mono-code text-xs px-2 py-1 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)]"
             >
-              <span className="hidden sm:inline">Next</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                <option key={p} value={p}>
+                  {p} / {totalPages}
+                </option>
+              ))}
+            </select>
           </div>
+
+          <button
+            type="button"
+            onClick={goToNextPage}
+            disabled={safePage === totalPages}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--border-strong)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            <span className="hidden sm:inline">Next</span>
+            <ChevronRightIcon className="w-4 h-4" />
+          </button>
         </div>
       )}
     </div>

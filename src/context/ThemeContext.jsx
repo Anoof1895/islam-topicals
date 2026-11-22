@@ -12,12 +12,22 @@ export const useTheme = () => {
 
 export const ThemeProvider = ({ children }) => {
   const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem('theme');
-    return saved ? JSON.parse(saved) : false;
+    try {
+      const saved = localStorage.getItem('theme');
+      return saved ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
   });
 
+  const [invertScan, setInvertScan] = useState(false);
+
   useEffect(() => {
-    localStorage.setItem('theme', JSON.stringify(isDark));
+    try {
+      localStorage.setItem('theme', JSON.stringify(isDark));
+    } catch {
+      // Ignore storage errors
+    }
     if (isDark) {
       document.documentElement.classList.add('dark');
     } else {
@@ -25,10 +35,11 @@ export const ThemeProvider = ({ children }) => {
     }
   }, [isDark]);
 
-  const toggleTheme = () => setIsDark(!isDark);
+  const toggleTheme = () => setIsDark(prev => !prev);
+  const toggleInvertScan = () => setInvertScan(prev => !prev);
 
   return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDark, toggleTheme, invertScan, toggleInvertScan }}>
       {children}
     </ThemeContext.Provider>
   );
