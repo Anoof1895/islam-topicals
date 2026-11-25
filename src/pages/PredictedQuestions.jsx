@@ -5,6 +5,7 @@ import { topicNames, getTopicName } from '../topicNames';
 import { getScholarSelectStyles } from '../utils/selectTheme';
 import SmartText from '../components/SmartText';
 import ScanStage from '../components/ScanStage';
+import PagePicker from '../components/PagePicker';
 import ShortcutsModal from '../components/ShortcutsModal';
 import {
   ChevronLeftIcon,
@@ -72,32 +73,32 @@ const PredictedQuestionList = ({
   const currentQuestions = questionsToDisplay.slice(startIndex, startIndex + questionsPerPage);
 
   return (
-    <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] h-full overflow-hidden flex flex-col">
-      <div className="p-3.5 border-b border-[var(--border-hairline)] bg-[var(--bg-subtle)]/45 space-y-3">
+    <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] h-full overflow-hidden flex flex-col">
+      <div className="p-3 border-b border-[var(--border-hairline)] bg-[var(--bg-inset)] space-y-2.5">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <h3 className="font-serif-editorial font-semibold text-base text-[var(--text-primary)] leading-tight">
+            <h3 className="font-editorial font-semibold text-[15px] text-[var(--ink-primary)] leading-tight">
               Predicted Bank
             </h3>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5 font-mono-code">
+            <p className="text-[11px] text-[var(--ink-muted)] mt-0.5 font-mono-code tabular-nums">
               {questionsToDisplay.length === 0
                 ? '0 items'
-                : `Page ${safePage}/${totalPages} • ${questionsToDisplay.length} items`}
+                : `Page ${safePage}/${totalPages} · ${questionsToDisplay.length} items`}
             </p>
           </div>
-          <span className="font-mono-code text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--accent-gold-soft)] text-[var(--accent-gold)]">
+          <span className="font-mono-code tabular-nums text-xs font-medium px-2 py-0.5 rounded bg-[var(--subject-islam-bg)] text-[var(--subject-islam)] border border-[var(--subject-islam-border)]">
             {questionsToDisplay.length}
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)]">
+        <div className="grid grid-cols-2 gap-0.5 p-0.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-warm-strong)]">
           <button
             type="button"
             onClick={() => setShowFavorites(false)}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`inline-flex items-center justify-center px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
               !showFavorites
-                ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-2xs'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
             }`}
           >
             All ({questions.length})
@@ -105,13 +106,16 @@ const PredictedQuestionList = ({
           <button
             type="button"
             onClick={() => setShowFavorites(true)}
-            className={`inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
               showFavorites
-                ? 'bg-[var(--accent-gold-soft)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/25 shadow-2xs'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
             }`}
           >
-            <StarIcon className="w-3.5 h-3.5" filled={showFavorites} />
+            <StarIcon
+              className={`w-3.5 h-3.5 shrink-0 ${showFavorites ? '' : 'text-[var(--subject-islam)]'}`}
+              filled={showFavorites}
+            />
             <span>Saved ({favMatchesCount})</span>
           </button>
         </div>
@@ -213,38 +217,32 @@ const PredictedQuestionList = ({
       </div>
 
       {totalPages > 1 && (
-        <div className="flex-shrink-0 px-3 py-2.5 border-t border-[var(--border-hairline)] bg-[var(--bg-subtle)]/45 flex items-center justify-between gap-2">
+        <div className="flex-shrink-0 px-3 py-2 border-t border-[var(--border-hairline)] bg-[var(--bg-inset)] flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={safePage === 1}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--text-primary)] disabled:opacity-40 transition-colors"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--ink-primary)] disabled:opacity-40 transition-colors"
           >
-            <ChevronLeftIcon className="w-4 h-4" />
+            <ChevronLeftIcon className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Prev</span>
           </button>
 
-          <select
-            aria-label="Select predicted page"
-            value={safePage}
-            onChange={(e) => setCurrentPage(Number(e.target.value))}
-            className="font-mono-code text-xs px-2 py-1 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--text-primary)]"
-          >
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-              <option key={p} value={p}>
-                {p} / {totalPages}
-              </option>
-            ))}
-          </select>
+          <PagePicker
+            currentPage={safePage}
+            totalPages={totalPages}
+            onChange={setCurrentPage}
+            ariaLabel="Select predicted page"
+          />
 
           <button
             type="button"
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={safePage === totalPages}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--text-primary)] disabled:opacity-40 transition-colors"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--ink-primary)] disabled:opacity-40 transition-colors"
           >
             <span className="hidden sm:inline">Next</span>
-            <ChevronRightIcon className="w-4 h-4" />
+            <ChevronRightIcon className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
@@ -345,7 +343,7 @@ const PredictedQuestionViewer = ({
             <button
               type="button"
               onClick={() => setSelectedQuestionId(questions[0].id)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-primary-hover)] transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] hover:bg-[var(--action-primary-hover)] transition-colors"
             >
               <span>Open First Prediction</span>
               <ChevronRightIcon className="w-4 h-4" />
@@ -417,13 +415,13 @@ const PredictedQuestionViewer = ({
             <button
               type="button"
               onClick={() => setShowAnswer(prev => !prev)}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white transition-all shadow-xs ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                 showAnswer
-                  ? 'bg-[var(--accent-gold)] hover:opacity-95'
-                  : 'bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)]'
+                  ? 'bg-[var(--subject-islam)] text-white hover:opacity-90'
+                  : 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] hover:bg-[var(--action-primary-hover)]'
               }`}
             >
-              <FlipIcon className="w-4 h-4" />
+              <FlipIcon className="w-3.5 h-3.5" />
               <span>{showAnswer ? 'View Question' : 'Reveal Answer'}</span>
             </button>
 
@@ -871,7 +869,7 @@ const PredictedQuestions = ({
       </div>
 
       {/* Unified Split-Pane Workspace with Mobile Master-Detail Drill-Down */}
-      <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 lg:h-[calc(100vh-14.5rem)]">
+      <div className="flex flex-col lg:flex-row gap-3.5 flex-1 min-h-0 lg:h-[calc(100dvh-13.25rem)]">
         <div
           className={`w-full lg:w-80 xl:w-96 flex-shrink-0 flex flex-col min-h-0 ${
             activeQuestion ? 'hidden lg:flex' : 'flex flex-1 lg:flex-none'

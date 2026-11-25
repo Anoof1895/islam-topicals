@@ -67,7 +67,6 @@ const BookViewer = () => {
   const currentPdfUrl = getCurrentPdfUrl();
   const currentBookName = getCurrentBookName();
 
-  // Auto-save with proper empty-note removal
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
@@ -108,34 +107,33 @@ const BookViewer = () => {
   const wordCount = currentNote.trim() ? currentNote.trim().split(/\s+/).length : 0;
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 gap-4 animate-fade-up">
+    <div className="flex-1 flex flex-col min-h-0 gap-3.5 animate-fade-up">
       {/* Top Toolbar */}
-      <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] px-4 sm:px-5 py-3.5">
+      <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] px-4 sm:px-5 py-3">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[var(--accent-primary-soft)] text-[var(--accent-primary)] flex items-center justify-center flex-shrink-0">
-              <LibraryIcon className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-md bg-[var(--subject-biology-bg)] border border-[var(--subject-biology-border)] text-[var(--subject-biology)] flex items-center justify-center shrink-0">
+              <LibraryIcon className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-serif-editorial text-xl sm:text-2xl font-semibold text-[var(--text-primary)] leading-tight">
+              <h2 className="font-editorial text-lg sm:text-xl font-semibold text-[var(--ink-primary)] leading-tight">
                 Textbooks &amp; Summaries
               </h2>
-              <p className="text-xs text-[var(--text-secondary)]">
+              <p className="text-xs text-[var(--ink-secondary)]">
                 Read syllabus PDFs side-by-side with your personal notebook
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Book vs Summary Segmented Control */}
-            <div className="inline-flex p-1 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)]">
+            <div className="inline-flex p-0.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-warm-strong)]">
               <button
                 type="button"
                 onClick={() => setActiveTab('book')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
                   activeTab === 'book'
-                    ? 'bg-[var(--accent-primary)] text-white shadow-2xs'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                    : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                 }`}
               >
                 Textbooks
@@ -143,10 +141,10 @@ const BookViewer = () => {
               <button
                 type="button"
                 onClick={() => setActiveTab('summary')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
                   activeTab === 'summary'
-                    ? 'bg-[var(--accent-gold)] text-white shadow-2xs'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                    : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                 }`}
               >
                 Book Summary
@@ -155,16 +153,16 @@ const BookViewer = () => {
 
             {activeTab === 'book' && (
               <>
-                <div className="inline-flex p-1 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)]">
+                <div className="inline-flex p-0.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-warm-strong)]">
                   {[9, 10].map(grade => (
                     <button
                       key={grade}
                       type="button"
                       onClick={() => setSelectedGrade(grade)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      className={`px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
                         selectedGrade === grade
-                          ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-2xs'
-                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                          ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                          : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                       }`}
                     >
                       Grade {grade}
@@ -172,7 +170,7 @@ const BookViewer = () => {
                   ))}
                 </div>
 
-                <div className="inline-flex p-1 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)]">
+                <div className="inline-flex p-0.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-warm-strong)]">
                   {[
                     { code: 'SB', label: 'Student Book' },
                     { code: 'TG', label: 'Teacher Guide' },
@@ -181,10 +179,10 @@ const BookViewer = () => {
                       key={bt.code}
                       type="button"
                       onClick={() => setSelectedBookType(bt.code)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      className={`px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
                         selectedBookType === bt.code
-                          ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-2xs'
-                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                          ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                          : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                       }`}
                     >
                       {bt.label}
@@ -197,10 +195,10 @@ const BookViewer = () => {
             <button
               type="button"
               onClick={() => setShowNotesPanel(prev => !prev)}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-colors ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${
                 showNotesPanel
-                  ? 'bg-[var(--accent-primary-soft)] text-[var(--accent-primary)] border-[var(--accent-primary)]/30'
-                  : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] border-[var(--border-hairline)] hover:text-[var(--text-primary)]'
+                  ? 'bg-[var(--subject-biology-bg)] text-[var(--subject-biology)] border-[var(--subject-biology-border)]'
+                  : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:text-[var(--ink-primary)]'
               }`}
             >
               <NoteIcon className="w-3.5 h-3.5" />
@@ -211,12 +209,12 @@ const BookViewer = () => {
       </div>
 
       {/* Split Reader + Notebook */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0 min-w-0">
+      <div className="flex-1 flex flex-col lg:flex-row gap-3.5 min-h-0 min-w-0">
         {/* PDF Viewer */}
-        <div className="flex-1 min-w-0 flex flex-col min-h-0 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] overflow-hidden">
-          <div className="px-4 py-3 border-b border-[var(--border-hairline)] bg-[var(--bg-subtle)]/40 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex-1 min-w-0 flex flex-col min-h-0 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-[var(--border-hairline)] bg-[var(--bg-inset)] flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h3 className="font-serif-editorial text-lg font-semibold text-[var(--text-primary)]">
+              <h3 className="font-editorial text-base font-semibold text-[var(--ink-primary)]">
                 {currentBookName}
               </h3>
               {pdfError && <p className="text-xs text-red-500 mt-0.5">{pdfError}</p>}
@@ -227,7 +225,7 @@ const BookViewer = () => {
                 href={currentPdfUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--border-strong)] transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--ink-primary)] hover:border-[var(--border-strong)] transition-colors"
               >
                 <ExternalLinkIcon className="w-3.5 h-3.5" />
                 <span>Open Tab</span>
@@ -235,7 +233,7 @@ const BookViewer = () => {
               <a
                 href={currentPdfUrl}
                 download
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-primary-hover)] transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] hover:bg-[var(--action-primary-hover)] transition-colors"
               >
                 <DownloadIcon className="w-3.5 h-3.5" />
                 <span>Download</span>
@@ -243,12 +241,12 @@ const BookViewer = () => {
             </div>
           </div>
 
-          <div className="flex-1 min-w-0 flex flex-col min-h-[540px] lg:min-h-[640px] relative bg-[var(--bg-subtle)]/50 p-2 sm:p-3 overflow-hidden">
+          <div className="flex-1 min-w-0 flex flex-col min-h-[540px] lg:min-h-[640px] relative bg-[var(--bg-paper)] p-2 sm:p-3 overflow-hidden">
             {pdfLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-surface)]/80 z-10">
+              <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-surface)]/85 z-10">
                 <div className="flex flex-col items-center gap-2">
-                  <div className="w-8 h-8 rounded-full border-2 border-[var(--border-strong)] border-t-[var(--accent-primary)] animate-spin" />
-                  <p className="text-xs font-medium text-[var(--text-secondary)]">Loading PDF...</p>
+                  <div className="w-7 h-7 rounded-full border-2 border-[var(--border-strong)] border-t-[var(--subject-biology)] animate-spin" />
+                  <p className="text-xs font-medium text-[var(--ink-secondary)]">Loading PDF...</p>
                 </div>
               </div>
             )}
@@ -256,7 +254,7 @@ const BookViewer = () => {
             <iframe
               key={currentPdfUrl}
               src={currentPdfUrl}
-              className="w-full flex-1 rounded-xl border border-[var(--border-hairline)] bg-white block"
+              className="w-full flex-1 rounded-md border border-[var(--border-hairline)] bg-white block"
               title={currentBookName}
               onLoadStart={() => setPdfLoading(true)}
               onLoad={() => {
@@ -273,16 +271,16 @@ const BookViewer = () => {
 
         {/* Collapsible Notes Sidebar */}
         {showNotesPanel && (
-          <div className="w-full lg:w-96 flex-shrink-0 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] flex flex-col overflow-hidden">
-            <div className="px-4 py-3.5 border-b border-[var(--border-hairline)] bg-[var(--bg-subtle)]/40 flex items-center justify-between gap-2">
+          <div className="w-full lg:w-96 flex-shrink-0 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] flex flex-col overflow-hidden">
+            <div className="px-4 py-3 border-b border-[var(--border-hairline)] bg-[var(--bg-inset)] flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
-                <NoteIcon className="w-4 h-4 text-[var(--accent-primary)] flex-shrink-0" />
-                <h3 className="font-serif-editorial text-base font-semibold text-[var(--text-primary)] truncate">
-                  Notes • {currentBookName}
+                <NoteIcon className="w-4 h-4 text-[var(--subject-biology)] shrink-0" />
+                <h3 className="font-editorial text-[15px] font-semibold text-[var(--ink-primary)] truncate">
+                  Notes · {currentBookName}
                 </h3>
               </div>
-              <span className="font-mono-code text-[11px] px-2 py-0.5 rounded-md bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--text-muted)] flex-shrink-0">
-                {wordCount}w • {currentNote.length}c
+              <span className="font-mono-code tabular-nums text-[11px] px-2 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--ink-muted)] shrink-0">
+                {wordCount}w · {currentNote.length}c
               </span>
             </div>
 
@@ -291,14 +289,14 @@ const BookViewer = () => {
                 value={currentNote}
                 onChange={(e) => handleNoteChange(e.target.value)}
                 placeholder={`Write study notes for ${currentBookName}...`}
-                className="w-full flex-1 min-h-[260px] lg:min-h-[420px] p-3.5 rounded-xl border border-[var(--border-hairline)] bg-[var(--bg-canvas)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] leading-relaxed resize-none focus:outline-none focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary)]/15 transition-all"
+                className="w-full flex-1 min-h-[260px] lg:min-h-[420px] p-3.5 rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-inset)] text-sm text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] leading-relaxed resize-none focus:outline-none focus:border-[var(--subject-biology)] transition-colors"
               />
             </div>
 
-            <div className="px-4 py-3 border-t border-[var(--border-hairline)] bg-[var(--bg-subtle)]/35 flex items-center justify-between gap-2">
+            <div className="px-4 py-2.5 border-t border-[var(--border-hairline)] bg-[var(--bg-inset)] flex items-center justify-between gap-2">
               <span
                 className={`text-xs font-medium ${
-                  saveStatus ? 'text-[var(--accent-primary)]' : 'text-[var(--text-muted)]'
+                  saveStatus ? 'text-[var(--subject-biology)]' : 'text-[var(--ink-muted)]'
                 }`}
               >
                 {saveStatus || 'Auto-saves locally'}
@@ -309,14 +307,14 @@ const BookViewer = () => {
                   type="button"
                   onClick={() => handleNoteChange('')}
                   disabled={!currentNote}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border-hairline)] text-[var(--text-secondary)] hover:text-red-500 disabled:opacity-40 transition-colors"
+                  className="px-3 py-1.5 rounded-md text-xs font-medium border border-[var(--border-hairline)] text-[var(--ink-secondary)] hover:text-red-600 dark:hover:text-red-400 disabled:opacity-40 transition-colors"
                 >
                   Clear
                 </button>
                 <button
                   type="button"
                   onClick={handleManualSave}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-primary-hover)] transition-colors"
+                  className="px-3.5 py-1.5 rounded-md text-xs font-medium bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] hover:bg-[var(--action-primary-hover)] transition-colors"
                 >
                   Save
                 </button>

@@ -16,12 +16,15 @@ import HscIslam from './pages/HscIslam';
 import { topicNames, getTopicName } from './topicNames';
 import { useTheme } from './context/ThemeContext';
 import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
   BookOpenIcon,
   CardDeckIcon,
   ChevronRightIcon,
   CompassIcon,
   LibraryIcon,
   LightbulbIcon,
+  MenuIcon,
   MoonIcon,
   RubElHizbIcon,
   ScrollTextIcon,
@@ -30,6 +33,7 @@ import {
   StarIcon,
   SunIcon,
   TargetIcon,
+  XIcon,
 } from './components/Icons';
 
 const MemoizedFilters = React.memo(Filters);
@@ -39,14 +43,51 @@ const MemoizedPredictedQuestions = React.memo(PredictedQuestions);
 const MemoizedDefinitions = React.memo(Definitions);
 const MemoizedHscIslam = React.memo(HscIslam);
 
+const SSC_VIEWS = ['main', 'quiz', 'books', 'predicted', 'definitions', 'unseen-topics'];
+
 const SSC_NAV_ITEMS = [
-  { id: 'main', label: 'Questions', shortLabel: 'Papers', icon: BookOpenIcon },
-  { id: 'quiz', label: 'Quiz', shortLabel: 'Quiz', icon: TargetIcon },
-  { id: 'predicted', label: 'Predicted', shortLabel: 'Predicted', icon: SparklesIcon },
-  { id: 'definitions', label: 'Definitions', shortLabel: 'Defs', icon: ScrollTextIcon },
-  { id: 'unseen-topics', label: 'Unseen Topics', shortLabel: 'Unseen', icon: CompassIcon },
-  { id: 'books', label: 'Textbooks', shortLabel: 'Books', icon: LibraryIcon },
+  { id: 'main', label: 'Questions', icon: BookOpenIcon },
+  { id: 'quiz', label: 'Quiz', icon: TargetIcon },
+  { id: 'predicted', label: 'Predicted', icon: SparklesIcon },
+  { id: 'definitions', label: 'Definitions', icon: ScrollTextIcon },
+  { id: 'unseen-topics', label: 'Unseen Topics', icon: CompassIcon },
+  { id: 'books', label: 'Textbooks', icon: LibraryIcon },
 ];
+
+const STUDY_HUB_URL = (
+  import.meta.env.VITE_STUDY_HUB_URL ||
+  import.meta.env.NEXT_PUBLIC_STUDY_HUB_URL ||
+  (import.meta.env.DEV ? 'http://localhost:3000' : 'https://igcse-interactive-labs.vercel.app')
+).replace(/\/+$/, '');
+
+function parseHashToView(rawHash) {
+  const cleaned = (rawHash || '').replace(/^#/, '').replace(/\/+$/, '').toLowerCase();
+  if (!cleaned || cleaned === '' || cleaned === '/overview' || cleaned === 'overview') {
+    return 'landing';
+  }
+  if (cleaned === '/hsc' || cleaned.startsWith('/hsc/')) {
+    return 'hsc-islam';
+  }
+  if (cleaned === '/ssc') {
+    return 'main';
+  }
+  if (cleaned.startsWith('/ssc/')) {
+    const sub = cleaned.slice('/ssc/'.length);
+    if (sub === 'quiz') return 'quiz';
+    if (sub === 'predicted') return 'predicted';
+    if (sub === 'definitions') return 'definitions';
+    if (sub === 'unseen' || sub === 'unseen-topics') return 'unseen-topics';
+    if (sub === 'books' || sub === 'textbooks') return 'books';
+    return 'main';
+  }
+  return 'landing';
+}
+
+function viewToCanonicalHash(view) {
+  if (view === 'landing') return '#/overview';
+  if (view === 'hsc-islam') return '#/hsc';
+  return '#/ssc';
+}
 
 const App = () => {
   const [selectedFilters, setSelectedFilters] = useState({});
@@ -57,6 +98,9 @@ const App = () => {
   const [predictedInitialFilters, setPredictedInitialFilters] = useState(null);
   const [definitionsInitialFilters, setDefinitionsInitialFilters] = useState(null);
   const [hscLaunch, setHscLaunch] = useState({ tab: 'mod1', viewMode: 'notes' });
+
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const [favorites, setFavorites] = useState(() => {
     try {
@@ -75,8 +119,39 @@ const App = () => {
     }
   });
 
-  const [currentView, setCurrentView] = useState('landing');
+  const [currentView, setCurrentView] = useState(() =>
+    typeof window !== 'undefined' ? parseHashToView(window.location.hash) : 'landing'
+  );
   const { isDark, toggleTheme } = useTheme();
+
+  // Listen to browser Back/Forward & direct hash navigation
+  useEffect(() => {
+    const syncFromHash = () => {
+      const nextView = parseHashToView(window.location.hash);
+      setCurrentView(prev => {
+        if (nextView === 'main' && SSC_VIEWS.includes(prev)) {
+          return prev;
+        }
+        return nextView;
+      });
+      setMobileMenuOpen(false);
+    };
+
+    window.addEventListener('hashchange', syncFromHash);
+    window.addEventListener('popstate', syncFromHash);
+    return () => {
+      window.removeEventListener('hashchange', syncFromHash);
+      window.removeEventListener('popstate', syncFromHash);
+    };
+  }, []);
+
+  // Subtle navbar scroll shadow
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 4);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const allHscFacts = useMemo(
     () => [
@@ -221,10 +296,28 @@ const App = () => {
     [filteredQuestions, selectedQuestionId]
   );
 
-  const handleViewChange = useCallback((view) => {
-    setCurrentView(view);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const syncHashForView = useCallback((view, pushHistory = true) => {
+    if (typeof window === 'undefined') return;
+    const targetHash = viewToCanonicalHash(view);
+    const currentHash = window.location.hash;
+    if (currentHash !== targetHash) {
+      if (pushHistory) {
+        window.history.pushState(null, '', targetHash);
+      } else {
+        window.history.replaceState(null, '', targetHash);
+      }
+    }
   }, []);
+
+  const handleViewChange = useCallback(
+    (view) => {
+      setCurrentView(view);
+      setMobileMenuOpen(false);
+      syncHashForView(view, true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    [syncHashForView]
+  );
 
   const handleFilterSearch = useCallback(() => {
     setSelectedQuestionId(null);
@@ -235,17 +328,25 @@ const App = () => {
     setSelectedQuestionId(null);
     setShowFavoritesOnly(true);
     setCurrentView('main');
-  }, []);
+    setMobileMenuOpen(false);
+    syncHashForView('main', true);
+  }, [syncHashForView]);
 
-  const openHscWith = useCallback((tab = 'mod1', viewMode = 'notes') => {
-    setHscLaunch({ tab, viewMode });
-    setCurrentView('hsc-islam');
-  }, []);
-
-  const isSscView = ['main', 'quiz', 'books', 'predicted', 'definitions', 'unseen-topics'].includes(
-    currentView
+  const openHscWith = useCallback(
+    (tab = 'mod1', viewMode = 'notes') => {
+      setHscLaunch({ tab, viewMode });
+      setCurrentView('hsc-islam');
+      setMobileMenuOpen(false);
+      syncHashForView('hsc-islam', true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    [syncHashForView]
   );
+
+  const isSscView = SSC_VIEWS.includes(currentView);
   const isHscView = currentView === 'hsc-islam';
+  const isWorkbenchFullBleed = ['main', 'predicted', 'definitions', 'books'].includes(currentView);
+  const studyHubHref = isHscView ? `${STUDY_HUB_URL}/hsc/islam` : `${STUDY_HUB_URL}/islam`;
 
   const shuffleDailyFact = () => {
     if (allHscFacts.length <= 1) return;
@@ -260,50 +361,73 @@ const App = () => {
     const currentFact = allHscFacts[dailyFactIndex] || '';
 
     return (
-      <div className="max-w-6xl mx-auto w-full space-y-6 py-2 sm:py-6 animate-fade-up">
-        {/* Hero Banner */}
-        <section className="relative rounded-3xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] overflow-hidden">
+      <div className="max-w-6xl mx-auto w-full space-y-6 py-2 sm:py-5 animate-fade-up">
+        {/* Editorial Masthead */}
+        <section className="relative rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] border-t-[3px] border-t-[var(--subject-islam)] overflow-hidden">
           <div className="absolute inset-0 bg-islamic-lattice pointer-events-none" />
-          <div className="relative px-6 py-10 sm:px-10 sm:py-12 text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--accent-primary-soft)] border border-[var(--accent-primary)]/20 text-[var(--accent-primary)] text-xs font-semibold mb-4">
-              <RubElHizbIcon className="w-4 h-4" />
-              <span className="arabic-text text-sm">التَّرْبِيَةُ الإِسْلَامِيَّة</span>
-              <span className="opacity-40">•</span>
-              <span>Maldives National Syllabus</span>
-            </div>
-
-            <h1 className="font-serif-editorial text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-[var(--text-primary)] mb-4">
+          <div className="relative px-6 py-8 sm:px-10 sm:py-10 max-w-3xl">
+            <h1 className="font-editorial text-[30px] sm:text-[40px] font-semibold tracking-[-0.025em] leading-[1.1] text-[var(--ink-primary)]">
               Islamee Tharubiyyathu
             </h1>
 
-            <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed max-w-2xl mx-auto">
+            <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[13px] font-medium text-[var(--ink-muted)]">
+              <span
+                className="inline-block h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                style={{ backgroundColor: 'var(--subject-islam)' }}
+                aria-hidden="true"
+              />
+              <span className="arabic-text text-[15px] font-medium text-[var(--ink-secondary)]" dir="rtl">
+                التَّرْبِيَةُ الإِسْلَامِيَّةُ
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>Maldives National Syllabus</span>
+            </div>
+
+            <p className="mt-3.5 text-[15px] text-[var(--ink-secondary)] leading-[1.6] max-w-[62ch]">
               A focused scholarly workspace uniting SSC O-Level topical past papers, teacher predictions, and definitions with HSC AS/A2 modular study notes and active-recall flashcards.
             </p>
           </div>
         </section>
 
-        {/* Two Flagship Syllabus Portal Cards */}
+        {/* Two Canonical Track Cards */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* SSC Card */}
-          <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] hover:border-[var(--accent-primary)]/50 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] p-6 sm:p-7 flex flex-col justify-between gap-6 transition-all">
+          {/* SSC (O-Level) Card — Botanical Emerald 3px top rule */}
+          <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] border-t-[3px] border-t-[var(--subject-biology)] hover:border-[var(--ink-primary)]/45 p-5 sm:p-6 flex flex-col justify-between gap-6 transition-[border-color] duration-150">
             <div>
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-[var(--accent-primary-soft)] text-[var(--accent-primary)] flex items-center justify-center">
-                  <BookOpenIcon className="w-6 h-6" />
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div className="flex items-center gap-2 text-xs font-medium text-[var(--ink-muted)]">
+                  <span
+                    className="inline-block h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                    style={{ backgroundColor: 'var(--subject-biology)' }}
+                    aria-hidden="true"
+                  />
+                  <span>Maldives SSC · National Subject</span>
                 </div>
-                <span className="font-mono-code text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border-hairline)]">
+                <span className="font-mono-code text-[11px] font-medium px-2 py-0.5 rounded bg-[var(--subject-biology-bg)] text-[var(--subject-biology)] border border-[var(--subject-biology-border)] shrink-0">
                   Grades 9 &amp; 10
                 </span>
               </div>
 
-              <h2 className="font-serif-editorial text-2xl sm:text-3xl font-semibold text-[var(--text-primary)] mb-2">
+              <h2 className="font-editorial text-[22px] sm:text-[26px] font-semibold tracking-[-0.02em] leading-[1.2] text-[var(--ink-primary)] mb-2">
                 SSC (O-Level)
               </h2>
-              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-5">
-                Explore {allQuestions.length} topical past paper questions with mark schemes, {predictedQuestions.length} predicted questions, {definitionsData.length} definitions, custom quizzes, and textbooks.
+              <p className="text-[14px] text-[var(--ink-secondary)] leading-[1.6] mb-5">
+                Explore{' '}
+                <span className="font-mono-code font-medium text-[var(--ink-primary)]">
+                  {allQuestions.length}
+                </span>{' '}
+                topical past paper questions with mark schemes,{' '}
+                <span className="font-mono-code font-medium text-[var(--ink-primary)]">
+                  {predictedQuestions.length}
+                </span>{' '}
+                predicted questions,{' '}
+                <span className="font-mono-code font-medium text-[var(--ink-primary)]">
+                  {definitionsData.length}
+                </span>{' '}
+                definitions, custom quizzes, and textbooks.
               </p>
 
-              {/* Quick Mode Pills */}
+              {/* Quick Mode Links */}
               <div className="flex flex-wrap gap-1.5">
                 {SSC_NAV_ITEMS.filter(item => item.id !== 'main').map(item => {
                   const Icon = item.icon;
@@ -312,7 +436,7 @@ const App = () => {
                       key={item.id}
                       type="button"
                       onClick={() => handleViewChange(item.id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] transition-colors"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-primary)] hover:border-[var(--subject-biology)] hover:text-[var(--subject-biology)] transition-colors"
                     >
                       <Icon className="w-3.5 h-3.5" />
                       <span>{item.label}</span>
@@ -328,89 +452,75 @@ const App = () => {
                 setShowFavoritesOnly(false);
                 handleViewChange('main');
               }}
-              className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-primary-hover)] transition-colors shadow-xs"
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] hover:bg-[var(--action-primary-hover)] transition-colors"
             >
               <span>Open Past Paper Archive</span>
               <ChevronRightIcon className="w-4 h-4" />
             </button>
           </div>
 
-          {/* HSC Card */}
-          <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] hover:border-[var(--accent-gold)]/55 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] p-6 sm:p-7 flex flex-col justify-between gap-6 transition-all">
+          {/* HSC (AS/A2 Level) Card — Warm Amber-Bronze 3px top rule */}
+          <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] border-t-[3px] border-t-[var(--subject-islam)] hover:border-[var(--ink-primary)]/45 p-5 sm:p-6 flex flex-col justify-between gap-6 transition-[border-color] duration-150">
             <div>
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-[var(--accent-gold-soft)] text-[var(--accent-gold)] flex items-center justify-center">
-                  <RubElHizbIcon className="w-6 h-6" />
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div className="flex items-center gap-2 text-xs font-medium text-[var(--ink-muted)]">
+                  <span
+                    className="inline-block h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                    style={{ backgroundColor: 'var(--subject-islam)' }}
+                    aria-hidden="true"
+                  />
+                  <span>Maldives HSC · National Subject</span>
                 </div>
-                <span className="font-mono-code text-xs font-semibold px-2.5 py-1 rounded-full bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border-hairline)]">
+                <span className="font-mono-code text-[11px] font-medium px-2 py-0.5 rounded bg-[var(--subject-islam-bg)] text-[var(--subject-islam)] border border-[var(--subject-islam-border)] shrink-0">
                   AS / A2 Modular
                 </span>
               </div>
 
-              <h2 className="font-serif-editorial text-2xl sm:text-3xl font-semibold text-[var(--text-primary)] mb-2">
+              <h2 className="font-editorial text-[22px] sm:text-[26px] font-semibold tracking-[-0.02em] leading-[1.2] text-[var(--ink-primary)] mb-2">
                 HSC (AS/A2 Level)
               </h2>
-              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-5">
-                Complete Module 1 (Aqeedha, {hscModulesData.mod1?.topics?.length || 20} chapters) &amp; Module 2 (Hadhees &amp; Akhlaaq, {hscModulesData.mod2?.topics?.length || 28} topics), interactive 2026 Specimen Paper &amp; Mark Scheme practice, flashcards, random facts, and 6-PDF library.
+              <p className="text-[14px] text-[var(--ink-secondary)] leading-[1.6] mb-5">
+                Complete Module 1 (Aqeedha,{' '}
+                <span className="font-mono-code font-medium text-[var(--ink-primary)]">
+                  {hscModulesData.mod1?.topics?.length || 20}
+                </span>{' '}
+                chapters) &amp; Module 2 (Hadhees &amp; Akhlaaq,{' '}
+                <span className="font-mono-code font-medium text-[var(--ink-primary)]">
+                  {hscModulesData.mod2?.topics?.length || 28}
+                </span>{' '}
+                topics), interactive 2026 Specimen Paper &amp; Mark Scheme practice, flashcards, random facts, and 6-PDF library.
               </p>
 
-              {/* Quick Mode Pills */}
+              {/* Quick Mode Links */}
               <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => openHscWith('mod1', 'notes')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition-colors"
-                >
-                  <BookOpenIcon className="w-3.5 h-3.5" />
-                  <span>Module 1</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openHscWith('mod2', 'notes')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition-colors"
-                >
-                  <BookOpenIcon className="w-3.5 h-3.5" />
-                  <span>Module 2</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openHscWith('specimen', 'notes')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition-colors"
-                >
-                  <ScrollTextIcon className="w-3.5 h-3.5" />
-                  <span>Specimen Exam</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openHscWith('mod1', 'flashcards')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition-colors"
-                >
-                  <CardDeckIcon className="w-3.5 h-3.5" />
-                  <span>Flashcard Decks</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openHscWith('facts', 'notes')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition-colors"
-                >
-                  <LightbulbIcon className="w-3.5 h-3.5" />
-                  <span>Random Facts</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openHscWith('textbooks', 'notes')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--accent-gold)] hover:text-[var(--accent-gold)] transition-colors"
-                >
-                  <LibraryIcon className="w-3.5 h-3.5" />
-                  <span>PDF Library (6)</span>
-                </button>
+                {[
+                  { label: 'Module 1', icon: BookOpenIcon, tab: 'mod1', mode: 'notes' },
+                  { label: 'Module 2', icon: BookOpenIcon, tab: 'mod2', mode: 'notes' },
+                  { label: 'Specimen Exam', icon: ScrollTextIcon, tab: 'specimen', mode: 'notes' },
+                  { label: 'Flashcard Decks', icon: CardDeckIcon, tab: 'mod1', mode: 'flashcards' },
+                  { label: 'Random Facts', icon: LightbulbIcon, tab: 'facts', mode: 'notes' },
+                  { label: 'PDF Library (6)', icon: LibraryIcon, tab: 'textbooks', mode: 'notes' },
+                ].map(btn => {
+                  const Icon = btn.icon;
+                  return (
+                    <button
+                      key={btn.label}
+                      type="button"
+                      onClick={() => openHscWith(btn.tab, btn.mode)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-primary)] hover:border-[var(--subject-islam)] hover:text-[var(--subject-islam)] transition-colors"
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{btn.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             <button
               type="button"
               onClick={() => openHscWith('mod1', 'notes')}
-              className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold bg-[var(--accent-gold)] text-white hover:opacity-95 transition-all shadow-xs"
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] hover:bg-[var(--action-primary-hover)] transition-colors"
             >
               <span>Open HSC Study Modules</span>
               <ChevronRightIcon className="w-4 h-4" />
@@ -418,108 +528,116 @@ const App = () => {
           </div>
         </section>
 
-        {/* Live Study Dashboard Strip */}
+        {/* Calm Hairline Study Telemetry Strip */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Saved Favorites */}
-          <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] p-5 flex flex-col justify-between gap-4">
-            <div className="flex items-start justify-between">
+          {/* Saved Bookmarks */}
+          <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-5 flex flex-col justify-between gap-4">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
                   Saved Bookmarks
                 </div>
-                <div className="font-mono-code text-3xl font-bold text-[var(--text-primary)] mt-1">
+                <div className="font-mono-code text-3xl font-semibold text-[var(--ink-primary)] mt-1">
                   {favorites.length}
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-[var(--accent-gold-soft)] text-[var(--accent-gold)] flex items-center justify-center">
-                <StarIcon className="w-5 h-5" filled={favorites.length > 0} />
+              <div className="w-9 h-9 rounded-lg bg-[var(--subject-islam-bg)] border border-[var(--subject-islam-border)] text-[var(--subject-islam)] flex items-center justify-center">
+                <StarIcon className="w-4 h-4" filled={favorites.length > 0} />
               </div>
             </div>
             <button
               type="button"
               onClick={openSavedFavorites}
-              className="w-full py-2 px-3 rounded-xl text-xs font-semibold bg-[var(--bg-subtle)] text-[var(--text-primary)] hover:bg-[var(--accent-gold-soft)] hover:text-[var(--accent-gold)] transition-colors text-center"
+              className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-xs font-medium bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-primary)] hover:border-[var(--subject-islam)] hover:text-[var(--subject-islam)] transition-colors"
             >
-              Review Saved Items →
+              <span>Review Saved Items</span>
+              <ArrowRightIcon className="w-3.5 h-3.5" />
             </button>
           </div>
 
           {/* HSC Mastery Progress */}
-          <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] p-5 flex flex-col justify-between gap-4">
+          <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-5 flex flex-col justify-between gap-4">
             <div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
                   HSC Mastery
                 </span>
-                <span className="font-mono-code text-xs font-bold text-[var(--accent-primary)]">
+                <span className="font-mono-code text-xs font-medium text-[var(--subject-islam)]">
                   {hscMastered.length} / {totalHscTopics} topics
                 </span>
               </div>
-              <div className="font-mono-code text-3xl font-bold text-[var(--text-primary)] mt-1">
+              <div className="font-mono-code text-3xl font-semibold text-[var(--ink-primary)] mt-1">
                 {hscProgressPct}%
               </div>
             </div>
             <div className="space-y-1.5">
-              <div className="w-full h-2 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
+              <div className="w-full h-1.5 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
                 <div
-                  className="h-full bg-[var(--accent-primary)] rounded-full transition-all duration-500"
+                  className="h-full bg-[var(--subject-islam)] rounded-full transition-all duration-300"
                   style={{ width: `${hscProgressPct}%` }}
                 />
               </div>
-              <div className="text-[11px] text-[var(--text-secondary)]">
+              <div className="text-[11px] text-[var(--ink-muted)]">
                 Module 1 &amp; 2 mastery saved locally
               </div>
             </div>
           </div>
 
-          {/* Syllabus Question Bank Stats */}
-          <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] p-5 flex flex-col justify-between gap-3">
-            <div className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
+          {/* Content Bank Stats */}
+          <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-5 flex flex-col justify-between gap-3">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
               Content Bank
             </div>
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-2.5 rounded-xl bg-[var(--bg-subtle)]">
-                <div className="font-mono-code text-lg font-bold text-[var(--text-primary)]">
+              <div className="p-2.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)]">
+                <div className="font-mono-code text-lg font-semibold text-[var(--ink-primary)]">
                   {allQuestions.length}
                 </div>
-                <div className="text-[10px] font-semibold text-[var(--text-secondary)]">Past Qs</div>
+                <div className="text-[10px] font-medium text-[var(--ink-muted)] mt-0.5">
+                  Past Qs
+                </div>
               </div>
-              <div className="p-2.5 rounded-xl bg-[var(--bg-subtle)]">
-                <div className="font-mono-code text-lg font-bold text-[var(--text-primary)]">
+              <div className="p-2.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)]">
+                <div className="font-mono-code text-lg font-semibold text-[var(--ink-primary)]">
                   {predictedQuestions.length}
                 </div>
-                <div className="text-[10px] font-semibold text-[var(--text-secondary)]">Predicted</div>
+                <div className="text-[10px] font-medium text-[var(--ink-muted)] mt-0.5">
+                  Predicted
+                </div>
               </div>
-              <div className="p-2.5 rounded-xl bg-[var(--bg-subtle)]">
-                <div className="font-mono-code text-lg font-bold text-[var(--text-primary)]">
+              <div className="p-2.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)]">
+                <div className="font-mono-code text-lg font-semibold text-[var(--ink-primary)]">
                   {definitionsData.length}
                 </div>
-                <div className="text-[10px] font-semibold text-[var(--text-secondary)]">Thaaraf</div>
+                <div className="text-[10px] font-medium text-[var(--ink-muted)] mt-0.5">
+                  Thaaraf
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Daily Scholarly Fact Preview */}
+        {/* RTL Thaana Random Fact Card */}
         {currentFact && (
-          <section className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] p-5 sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <section className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-5 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3.5">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[var(--accent-primary-soft)] text-[var(--accent-primary)] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-md bg-[var(--subject-islam-bg)] border border-[var(--subject-islam-border)] text-[var(--subject-islam)] flex items-center justify-center shrink-0">
                   <LightbulbIcon className="w-4 h-4" />
                 </div>
-                <div>
-                  <h3 className="dhivehi-text text-base sm:text-lg font-bold text-[var(--text-primary)]">
-                    ތިޔަދަރިވަރުންނަށް އެނގޭތަ!
-                  </h3>
-                </div>
+                <h3
+                  className="dhivehi-text text-base sm:text-lg font-bold text-[var(--ink-primary)]"
+                  dir="rtl"
+                >
+                  ތިޔަދަރިވަރުންނަށް އެނގޭތަ!
+                </h3>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={shuffleDailyFact}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--border-strong)] transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-primary)] hover:border-[var(--border-strong)] transition-colors"
                 >
                   <ShuffleIcon className="w-3.5 h-3.5" />
                   <span>Another Fact</span>
@@ -527,15 +645,16 @@ const App = () => {
                 <button
                   type="button"
                   onClick={() => openHscWith('facts', 'notes')}
-                  className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--accent-primary)] hover:bg-[var(--accent-primary-soft)] transition-colors"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-[var(--subject-islam)] hover:bg-[var(--subject-islam-bg)] transition-colors"
                 >
-                  Open Fact Bank →
+                  <span>Open Fact Bank</span>
+                  <ArrowRightIcon className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
 
             <p
-              className="dhivehi-text text-base sm:text-lg text-[var(--text-primary)] leading-[2.2] text-right bg-[var(--bg-elevated)] border border-[var(--border-hairline)] rounded-xl px-5 py-4"
+              className="dhivehi-text text-base sm:text-lg text-[var(--ink-primary)] leading-[2.2] text-right bg-[var(--bg-inset)] border border-[var(--border-hairline)] rounded-md px-5 py-4"
               dir="rtl"
             >
               {currentFact}
@@ -547,7 +666,7 @@ const App = () => {
   };
 
   const renderMainView = () => (
-    <div className="flex-1 flex flex-col min-h-0 gap-3 lg:gap-4">
+    <div className="flex-1 flex flex-col min-h-0 gap-3">
       <MemoizedFilters
         options={options}
         selectedFilters={selectedFilters}
@@ -559,7 +678,7 @@ const App = () => {
         totalCount={filteredQuestions.length}
       />
 
-      <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 lg:h-[calc(100vh-14.5rem)]">
+      <div className="flex flex-col lg:flex-row gap-3.5 flex-1 min-h-0 lg:h-[calc(100dvh-13.25rem)]">
         <div
           className={`w-full lg:w-80 xl:w-96 flex-shrink-0 flex flex-col min-h-0 ${
             currentQuestion ? 'hidden lg:flex' : 'flex flex-1 lg:flex-none'
@@ -582,7 +701,7 @@ const App = () => {
         <div
           className={
             currentQuestion
-              ? 'fixed inset-0 z-40 bg-[var(--bg-canvas)] p-2 flex flex-col lg:static lg:inset-auto lg:z-auto lg:bg-transparent lg:p-0 lg:flex-1 lg:min-w-0 lg:min-h-0'
+              ? 'fixed inset-0 z-40 bg-[var(--bg-paper)] p-2 flex flex-col lg:static lg:inset-auto lg:z-auto lg:bg-transparent lg:p-0 lg:flex-1 lg:min-w-0 lg:min-h-0'
               : 'hidden lg:flex lg:flex-1 lg:min-w-0 lg:flex-col lg:min-h-0'
           }
         >
@@ -678,42 +797,62 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--bg-canvas)] text-[var(--text-primary)] transition-colors duration-200">
-      {/* Persistent Scholarly Top Header */}
-      <header className="sticky top-0 z-30 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)]/92 backdrop-blur-md">
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-8 h-16 flex items-center justify-between gap-3">
-          {/* Left: Brand Emblem + Title */}
-          <button
-            type="button"
-            onClick={() => handleViewChange('landing')}
-            className="flex items-center gap-2.5 text-left group flex-shrink-0"
-            title="Return to Study Overview"
-          >
-            <div className="w-9 h-9 rounded-xl bg-[var(--accent-primary)] text-white flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
-              <RubElHizbIcon className="w-5 h-5" />
-            </div>
-            <div className="hidden xs:block sm:block">
-              <div className="font-serif-editorial text-base sm:text-lg font-semibold text-[var(--text-primary)] leading-none">
-                Islamee Tharubiyyathu
-              </div>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-1">
-                {isSscView ? 'SSC O-Level' : isHscView ? 'HSC AS/A2 Level' : 'Study Portal'}
-              </div>
-            </div>
-          </button>
+    <div className="min-h-screen flex flex-col bg-[var(--bg-paper)] text-[var(--ink-primary)] transition-colors duration-150">
+      {/* Full-Bleed Editorial Navbar */}
+      <header
+        className={`sticky top-0 z-30 bg-[var(--bg-surface)] border-b border-[var(--border-hairline)] transition-shadow duration-150 ${
+          isScrolled ? 'shadow-[var(--shadow-header-scrolled)]' : ''
+        }`}
+      >
+        {/* 2px Canonical Warm Amber-Bronze Top Accent Rule */}
+        <div
+          className="h-[2px] w-full"
+          style={{ backgroundColor: 'var(--subject-islam)' }}
+          aria-hidden="true"
+        />
 
-          {/* Center: Instant Syllabus Switcher */}
+        <div className="w-full px-3 sm:px-5 lg:px-6 h-[56px] flex items-center justify-between gap-3">
+          {/* Left: Contextual Study Hub Bridge + Divider + Brand Wordmark */}
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <a
+              href={studyHubHref}
+              className="hidden sm:inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors shrink-0 whitespace-nowrap"
+              title={`Return to Study Hub (${isHscView ? 'HSC Islam' : 'SSC Islam'})`}
+            >
+              <ArrowLeftIcon className="w-3.5 h-3.5 shrink-0" />
+              <span>Study Hub</span>
+            </a>
+
+            <span
+              className="hidden sm:block h-4 w-px bg-[var(--border-hairline)] shrink-0"
+              aria-hidden="true"
+            />
+
+            <button
+              type="button"
+              onClick={() => handleViewChange('landing')}
+              className="inline-flex items-center gap-2 text-left group shrink-0 whitespace-nowrap"
+              title="Return to Study Overview"
+            >
+              <RubElHizbIcon className="w-4 h-4 text-[var(--subject-islam)] shrink-0" />
+              <span className="font-editorial text-[16px] sm:text-[18px] font-semibold tracking-[-0.02em] text-[var(--ink-primary)] leading-none shrink-0 whitespace-nowrap">
+                Islamee Tharubiyyathu
+              </span>
+            </button>
+          </div>
+
+          {/* Center: Flush Bottom-Underline Primary Tabs (Desktop & Tablet) */}
           <nav
-            aria-label="Syllabus Switcher"
-            className="inline-flex items-center p-1 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)]"
+            aria-label="Primary Navigation"
+            className="hidden md:flex items-stretch h-full gap-1"
           >
             <button
               type="button"
               onClick={() => handleViewChange('landing')}
-              className={`px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`inline-flex items-center px-3.5 text-[13.5px] font-medium border-b-[2.5px] -mb-px transition-colors whitespace-nowrap ${
                 currentView === 'landing'
-                  ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-2xs'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  ? 'border-[var(--subject-islam)] text-[var(--ink-primary)] font-semibold'
+                  : 'border-transparent text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
               }`}
             >
               Overview
@@ -721,56 +860,139 @@ const App = () => {
             <button
               type="button"
               onClick={() => handleViewChange(isSscView ? currentView : 'main')}
-              className={`px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`inline-flex items-center px-3.5 text-[13.5px] font-medium border-b-[2.5px] -mb-px transition-colors whitespace-nowrap ${
                 isSscView
-                  ? 'bg-[var(--accent-primary)] text-white shadow-2xs'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  ? 'border-[var(--subject-biology)] text-[var(--ink-primary)] font-semibold'
+                  : 'border-transparent text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
               }`}
             >
-              SSC <span className="hidden md:inline">O-Level</span>
+              SSC O-Level
             </button>
             <button
               type="button"
               onClick={() => handleViewChange('hsc-islam')}
-              className={`px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`inline-flex items-center px-3.5 text-[13.5px] font-medium border-b-[2.5px] -mb-px transition-colors whitespace-nowrap ${
                 isHscView
-                  ? 'bg-[var(--accent-gold)] text-white shadow-2xs'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  ? 'border-[var(--subject-islam)] text-[var(--ink-primary)] font-semibold'
+                  : 'border-transparent text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
               }`}
             >
-              HSC <span className="hidden md:inline">AS/A2</span>
+              HSC AS/A2
             </button>
           </nav>
 
-          {/* Right: Favorites Shortcut + Theme Toggle */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Right: Saved Counter + Theme Toggle + Mobile Menu */}
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={openSavedFavorites}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--accent-gold)] transition-colors"
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-primary)] hover:border-[var(--subject-islam)] transition-colors"
               title="Open saved questions"
             >
-              <StarIcon className="w-3.5 h-3.5 text-[var(--accent-gold)]" filled={favorites.length > 0} />
-              <span className="font-mono-code">{favorites.length}</span>
+              <StarIcon className="w-3.5 h-3.5 text-[var(--subject-islam)]" filled={favorites.length > 0} />
+              <span className="font-mono-code tabular-nums">{favorites.length}</span>
             </button>
 
             <button
               type="button"
               onClick={toggleTheme}
-              className="p-2 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--border-strong)] transition-colors"
-              title={isDark ? 'Switch to Warm Parchment Light Mode' : 'Switch to Obsidian Dark Mode'}
+              className="p-2 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-primary)] hover:border-[var(--border-strong)] transition-colors"
+              title={isDark ? 'Switch to Light Editorial Mode' : 'Switch to Oxford Slate Dark Mode'}
               aria-label="Toggle theme"
             >
-              {isDark ? <SunIcon className="w-4 h-4 text-[var(--accent-gold)]" /> : <MoonIcon className="w-4 h-4" />}
+              {isDark ? (
+                <SunIcon className="w-4 h-4 text-[var(--subject-islam)]" />
+              ) : (
+                <MoonIcon className="w-4 h-4 text-[var(--ink-secondary)]" />
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(prev => !prev)}
+              className="md:hidden p-2 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-primary)] hover:border-[var(--border-strong)] transition-colors"
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? <XIcon className="w-4 h-4" /> : <MenuIcon className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
-        {/* Desktop SSC Study Mode Tab Strip */}
+        {/* Mobile Dropdown Menu with Study Hub at Top */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-[var(--border-hairline)] bg-[var(--bg-surface)] px-3 py-3 space-y-1.5 animate-fade-up">
+            <a
+              href={studyHubHref}
+              className="flex items-center justify-between px-3 py-2 rounded-md text-xs font-medium bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <ArrowLeftIcon className="w-3.5 h-3.5" />
+                <span>Study Hub ({isHscView ? 'HSC Islam' : 'SSC Islam'})</span>
+              </span>
+            </a>
+
+            <div className="grid grid-cols-3 gap-1.5 pt-1">
+              <button
+                type="button"
+                onClick={() => handleViewChange('landing')}
+                className={`px-3 py-2 rounded-md text-xs font-medium border text-center transition-colors ${
+                  currentView === 'landing'
+                    ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] border-[var(--action-primary-bg)]'
+                    : 'bg-[var(--bg-surface)] text-[var(--ink-secondary)] border-[var(--border-hairline)]'
+                }`}
+              >
+                Overview
+              </button>
+              <button
+                type="button"
+                onClick={() => handleViewChange(isSscView ? currentView : 'main')}
+                className={`px-3 py-2 rounded-md text-xs font-medium border text-center transition-colors ${
+                  isSscView
+                    ? 'bg-[var(--subject-biology)] text-white border-[var(--subject-biology)]'
+                    : 'bg-[var(--bg-surface)] text-[var(--ink-secondary)] border-[var(--border-hairline)]'
+                }`}
+              >
+                SSC O-Level
+              </button>
+              <button
+                type="button"
+                onClick={() => handleViewChange('hsc-islam')}
+                className={`px-3 py-2 rounded-md text-xs font-medium border text-center transition-colors ${
+                  isHscView
+                    ? 'bg-[var(--subject-islam)] text-white border-[var(--subject-islam)]'
+                    : 'bg-[var(--bg-surface)] text-[var(--ink-secondary)] border-[var(--border-hairline)]'
+                }`}
+              >
+                HSC AS/A2
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={openSavedFavorites}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-md text-xs font-medium text-[var(--ink-secondary)] hover:bg-[var(--bg-subtle)]"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <StarIcon className="w-3.5 h-3.5 text-[var(--subject-islam)]" filled={favorites.length > 0} />
+                <span>Saved Bookmarks</span>
+              </span>
+              <span className="font-mono-code tabular-nums text-[var(--ink-primary)]">
+                {favorites.length}
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* Connected SSC Underline Sub-Tabs (Desktop & Mobile with hidden scrollbar) */}
         {isSscView && (
-          <div className="hidden lg:block border-t border-[var(--border-hairline)] bg-[var(--bg-subtle)]/40">
-            <div className="max-w-[1440px] mx-auto px-8 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-1 py-1.5">
+          <div className="border-t border-[var(--border-hairline)] bg-[var(--bg-surface)]">
+            <div className="w-full px-3 sm:px-5 lg:px-6 flex items-center justify-between gap-4">
+              <div
+                role="tablist"
+                aria-label="SSC O-Level Sections"
+                className="flex items-center gap-1 overflow-x-auto no-scrollbar"
+              >
                 {SSC_NAV_ITEMS.map(item => {
                   const Icon = item.icon;
                   const active = currentView === item.id;
@@ -778,21 +1000,23 @@ const App = () => {
                     <button
                       key={item.id}
                       type="button"
+                      role="tab"
+                      aria-selected={active}
                       onClick={() => handleViewChange(item.id)}
-                      className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium whitespace-nowrap border-b-[2.5px] -mb-px transition-colors shrink-0 ${
                         active
-                          ? 'bg-[var(--bg-surface)] text-[var(--accent-primary)] border border-[var(--border-hairline)] shadow-2xs'
-                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)]/50'
+                          ? 'border-[var(--subject-biology)] text-[var(--subject-biology)] font-semibold'
+                          : 'border-transparent text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                       }`}
                     >
-                      <Icon className="w-4 h-4" />
+                      <Icon className="w-3.5 h-3.5 shrink-0" />
                       <span>{item.label}</span>
                     </button>
                   );
                 })}
               </div>
 
-              <div className="text-xs font-mono-code text-[var(--text-muted)]">
+              <div className="hidden lg:block text-xs font-mono-code tabular-nums text-[var(--ink-muted)] shrink-0 whitespace-nowrap">
                 {currentView === 'main'
                   ? `${filteredQuestions.length} matching questions`
                   : currentView === 'quiz'
@@ -810,53 +1034,23 @@ const App = () => {
         )}
       </header>
 
-      {/* Main Content Area */}
+      {/* Main Content Area — Full-Viewport Workbench Density vs Editorial Landing */}
       <main
-        className={`flex-1 max-w-[1440px] w-full mx-auto px-3 sm:px-5 lg:px-8 py-4 lg:py-6 flex flex-col min-h-0 ${
-          isSscView ? 'pb-20 lg:pb-6' : ''
+        className={`flex-1 w-full flex flex-col min-h-0 ${
+          isWorkbenchFullBleed
+            ? 'px-3 sm:px-5 lg:px-6 py-3 lg:py-4'
+            : 'max-w-7xl mx-auto px-3 sm:px-5 lg:px-8 py-4 lg:py-6'
         }`}
       >
         {renderCurrentView()}
       </main>
 
-      {/* Mobile Bottom Tab Bar (SSC Views) */}
-      {isSscView && (
-        <nav
-          aria-label="Mobile SSC Navigation"
-          className="lg:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-[var(--border-hairline)] bg-[var(--bg-surface)]/95 backdrop-blur-md px-1 py-1.5 grid grid-cols-6 gap-0.5"
-        >
-          {SSC_NAV_ITEMS.map(item => {
-            const Icon = item.icon;
-            const active = currentView === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handleViewChange(item.id)}
-                className={`flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-semibold transition-colors ${
-                  active
-                    ? 'text-[var(--accent-primary)] bg-[var(--accent-primary-soft)]'
-                    : 'text-[var(--text-secondary)]'
-                }`}
-              >
-                <Icon className="w-4 h-4 mb-0.5" />
-                <span className="truncate max-w-full px-0.5">{item.shortLabel}</span>
-              </button>
-            );
-          })}
-        </nav>
-      )}
-
-      {/* Subtle Scholarly Footer */}
-      <footer
-        className={`border-t border-[var(--border-hairline)] py-4 mt-auto bg-[var(--bg-surface)]/60 ${
-          isSscView ? 'mb-14 lg:mb-0' : ''
-        }`}
-      >
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[var(--text-muted)]">
-          <div>2026 © islam-topicals.vercel.app</div>
+      {/* Calm Hairline Editorial Footer */}
+      <footer className="border-t border-[var(--border-hairline)] py-3.5 mt-auto bg-[var(--bg-surface)]">
+        <div className="w-full px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[var(--ink-muted)]">
+          <div className="font-mono-code tabular-nums">2026 © islam-topicals.vercel.app</div>
           <div>
-            Crafted by <span className="font-semibold text-[var(--text-secondary)]">bakari-koshi</span>
+            Crafted by <span className="font-medium text-[var(--ink-secondary)]">bakari-koshi</span>
           </div>
         </div>
       </footer>

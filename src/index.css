@@ -1,121 +1,136 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
 
+/* Webfont Faruma scoped strictly to Thaana (U+0780-U+07BF) so Latin stays in Geist / Source Serif 4 */
 @font-face {
-  font-family: 'Faruma';
-  src: url('/fonts/Faruma.ttf') format('truetype');
+  font-family: "Faruma";
+  src: url("/fonts/Faruma.ttf") format("truetype"), local("Faruma"), local("Faruma Regular");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0780-U+07BF;
 }
 
 :root {
-  --bg-canvas: #FBF9F5;
-  --bg-surface: #FFFFFF;
-  --bg-subtle: #F4F0EA;
-  --bg-elevated: #FAF7F0;
-  --text-primary: #141E1B;
-  --text-secondary: #52605B;
-  --text-muted: #84928D;
-  --accent-primary: #0F5F4C;
-  --accent-primary-hover: #0B4A3B;
-  --accent-primary-soft: #E6F2EE;
-  --accent-gold: #C48B28;
-  --accent-gold-soft: #FDF6E7;
-  --border-hairline: #E4DFD7;
-  --border-strong: #D1C9BC;
-  --shadow-card: 0 1px 2px rgba(20, 30, 27, 0.04), 0 4px 14px rgba(20, 30, 27, 0.04);
-  --shadow-elevated: 0 12px 32px -8px rgba(20, 30, 27, 0.12), 0 2px 6px rgba(20, 30, 27, 0.04);
+  /* Semantic surface & ink aliases bound to canonical v0.4 tokens */
+  --bg-canvas: var(--bg-paper);
+  --bg-elevated: var(--bg-inset);
+  --text-primary: var(--ink-primary);
+  --text-secondary: var(--ink-secondary);
+  --text-muted: var(--ink-muted);
+
+  /* Canonical Islam Brand & HSC Accent: Warm Amber-Bronze */
+  --accent-islam: var(--subject-islam);
+  --accent-islam-hover: #92400E;
+  --accent-islam-soft: var(--subject-islam-bg);
+  --accent-islam-border: var(--subject-islam-border);
+
+  /* Legacy alias mapped to canonical Islam Warm Amber-Bronze */
+  --accent-gold: var(--subject-islam);
+  --accent-gold-hover: #92400E;
+  --accent-gold-soft: var(--subject-islam-bg);
+  --accent-gold-border: var(--subject-islam-border);
+
+  /* Secondary Scholarly & SSC Accent: Botanical Emerald */
+  --accent-primary: var(--subject-biology);
+  --accent-primary-hover: #166534;
+  --accent-primary-soft: var(--subject-biology-bg);
+  --accent-primary-border: var(--subject-biology-border);
+
+  /* Calm hairline elevation */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-elevated: 0 10px 24px -10px rgba(15, 23, 42, 0.14);
 }
 
-html.dark {
-  --bg-canvas: #0A100E;
-  --bg-surface: #111A17;
-  --bg-subtle: #17231F;
-  --bg-elevated: #1D2B26;
-  --text-primary: #EFECE6;
-  --text-secondary: #9AA8A3;
-  --text-muted: #687973;
-  --accent-primary: #10B981;
-  --accent-primary-hover: #34D399;
-  --accent-primary-soft: rgba(16, 185, 129, 0.14);
-  --accent-gold: #F59E0B;
-  --accent-gold-soft: rgba(245, 158, 11, 0.14);
-  --border-hairline: #1F2E29;
-  --border-strong: #2C4039;
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.25), 0 4px 14px rgba(0, 0, 0, 0.2);
-  --shadow-elevated: 0 16px 36px -8px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+html.dark,
+[data-theme="dark"] {
+  --bg-canvas: var(--bg-paper);
+  --bg-elevated: var(--bg-inset);
+  --text-primary: var(--ink-primary);
+  --text-secondary: var(--ink-secondary);
+  --text-muted: var(--ink-muted);
+
+  --accent-islam: var(--subject-islam);
+  --accent-islam-hover: #F59E0B;
+  --accent-islam-soft: var(--subject-islam-bg);
+  --accent-islam-border: var(--subject-islam-border);
+
+  --accent-gold: var(--subject-islam);
+  --accent-gold-hover: #F59E0B;
+  --accent-gold-soft: var(--subject-islam-bg);
+  --accent-gold-border: var(--subject-islam-border);
+
+  --accent-primary: var(--subject-biology);
+  --accent-primary-hover: #22C55E;
+  --accent-primary-soft: var(--subject-biology-bg);
+  --accent-primary-border: var(--subject-biology-border);
+
+  --shadow-card: 0 1px 2px rgba(2, 6, 23, 0.35);
+  --shadow-elevated: 0 12px 28px -10px rgba(2, 6, 23, 0.72);
 }
 
 html {
-  background-color: var(--bg-canvas);
-  color: var(--text-primary);
+  background-color: var(--bg-paper);
+  color: var(--ink-primary);
   scroll-behavior: smooth;
 }
 
 body {
-  background-color: var(--bg-canvas);
-  color: var(--text-primary);
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-paper);
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.25s ease, color 0.25s ease;
+  transition: background-color 150ms var(--ease-editorial), color 150ms var(--ease-editorial);
 }
 
-.font-serif-editorial {
-  font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
+::selection {
+  background-color: var(--selection-bg);
+}
+
+.font-serif-editorial,
+.font-editorial {
+  font-family: var(--font-editorial);
+  letter-spacing: -0.02em;
 }
 
 .font-sans-ui {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .font-mono-code {
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Dhivehi / Thaana typography with optical scale & breathing room for fili diacritics */
 .dhivehi-text,
 [lang="dv"] {
-  font-family: 'Faruma', 'MV Typewriter', 'Noto Sans Arabic', sans-serif !important;
+  font-family: "Faruma", "Noto Sans Arabic", var(--font-sans) !important;
   line-height: 2.15;
   letter-spacing: 0;
   font-feature-settings: "kern" 1, "liga" 1;
 }
 
 .arabic-text {
-  font-family: 'Noto Sans Arabic', 'Traditional Arabic', serif;
+  font-family: "Noto Sans Arabic", "Traditional Arabic", serif;
   line-height: 1.9;
 }
 
 input,
 button,
-textarea,
-select {
+textarea {
   font-family: inherit;
 }
 
-/* Subtle Islamic geometric lattice background */
+/* Very subtle Warm Amber-Bronze geometric hairline watermark for masthead */
 .bg-islamic-lattice {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%230F5F4C' stroke-opacity='0.055' stroke-width='1'%3E%3Cpath d='M32 4 L40 24 L60 32 L40 40 L32 60 L24 40 L4 32 L24 24 Z'/%3E%3Crect x='18' y='18' width='28' height='28'/%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3C/g%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23B45309' stroke-opacity='0.045' stroke-width='0.9'%3E%3Cpath d='M32 4 L40 24 L60 32 L40 40 L32 60 L24 40 L4 32 L24 24 Z'/%3E%3Crect x='18' y='18' width='28' height='28'/%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3C/g%3E%3C/svg%3E");
 }
 
-html.dark .bg-islamic-lattice {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%2310B981' stroke-opacity='0.065' stroke-width='1'%3E%3Cpath d='M32 4 L40 24 L60 32 L40 40 L32 60 L24 40 L4 32 L24 24 Z'/%3E%3Crect x='18' y='18' width='28' height='28'/%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3C/g%3E%3C/svg%3E");
-}
-
-/* Document Scan Stage */
-.scan-stage-ivory {
-  background-color: #FAF7F0;
-}
-
-.scan-stage-dark {
-  background-color: #131B18;
-}
-
-.scan-invert {
-  filter: invert(0.91) hue-rotate(180deg) contrast(1.06) brightness(0.97);
+html.dark .bg-islamic-lattice,
+[data-theme="dark"] .bg-islamic-lattice {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23FBBF24' stroke-opacity='0.045' stroke-width='0.9'%3E%3Cpath d='M32 4 L40 24 L60 32 L40 40 L32 60 L24 40 L4 32 L24 24 Z'/%3E%3Crect x='18' y='18' width='28' height='28'/%3E%3Ccircle cx='32' cy='32' r='6'/%3E%3C/g%3E%3C/svg%3E");
 }
 
 /* Image clarity for past paper scans */
@@ -139,15 +154,7 @@ img.exam-scan-img {
 }
 
 .scholar-scroll::-webkit-scrollbar-thumb:hover {
-  background-color: var(--text-muted);
-}
-
-.no-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+  background-color: var(--ink-muted);
 }
 
 /* 3D Flashcard Flip */
@@ -169,7 +176,7 @@ img.exam-scan-img {
 @keyframes fadeSlideUp {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -178,7 +185,7 @@ img.exam-scan-img {
 }
 
 .animate-fade-up {
-  animation: fadeSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeSlideUp 180ms var(--ease-editorial) forwards;
 }
 
 @keyframes drawerSlideLeft {
@@ -193,7 +200,7 @@ img.exam-scan-img {
 }
 
 .animate-drawer-left {
-  animation: drawerSlideLeft 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: drawerSlideLeft 200ms var(--ease-editorial) forwards;
 }
 
 @keyframes drawerSlideUp {
@@ -208,15 +215,17 @@ img.exam-scan-img {
 }
 
 .animate-drawer-up {
-  animation: drawerSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: drawerSlideUp 200ms var(--ease-editorial) forwards;
 }
 
-/* Print optimization */
+/* Print optimization — ensure paper scans never print inverted */
 @media print {
-  img {
+  img,
+  .exam-paper-dark-invert {
     max-width: 100% !important;
     max-height: none !important;
     page-break-inside: avoid;
     filter: none !important;
+    mix-blend-mode: normal !important;
   }
 }

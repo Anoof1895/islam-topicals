@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const ThemeContext = createContext();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
@@ -11,16 +12,26 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
+  // Default first-time visitors (no saved theme) to Light Editorial (false)
   const [isDark, setIsDark] = useState(() => {
     try {
       const saved = localStorage.getItem('theme');
-      return saved ? JSON.parse(saved) : false;
+      return saved ? JSON.parse(saved) === true : false;
     } catch {
       return false;
     }
   });
 
-  const [invertScan, setInvertScan] = useState(false);
+  // Dark-Mode-only isolated Dark Paper toggle for scanned past papers (default false)
+  const [darkPaper, setDarkPaper] = useState(() => {
+    try {
+      const saved = localStorage.getItem('islam_dark_paper');
+      if (saved === null) return false;
+      return saved === 'true' || JSON.parse(saved) === true;
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     try {
@@ -28,18 +39,32 @@ export const ThemeProvider = ({ children }) => {
     } catch {
       // Ignore storage errors
     }
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', isDark);
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   }, [isDark]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('islam_dark_paper', String(darkPaper));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [darkPaper]);
+
   const toggleTheme = () => setIsDark(prev => !prev);
-  const toggleInvertScan = () => setInvertScan(prev => !prev);
+  const toggleDarkPaper = () => setDarkPaper(prev => !prev);
 
   return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme, invertScan, toggleInvertScan }}>
+    <ThemeContext.Provider
+      value={{
+        isDark,
+        toggleTheme,
+        darkPaper,
+        toggleDarkPaper,
+        invertScan: isDark && darkPaper,
+        toggleInvertScan: toggleDarkPaper,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );

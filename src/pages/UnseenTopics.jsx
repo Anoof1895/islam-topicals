@@ -16,7 +16,6 @@ const UnseenTopics = ({
   const [activeTab, setActiveTab] = useState('unseen'); // 'unseen' | 'coverage'
   const [selectedBookTab, setSelectedBookTab] = useState('all'); // 'all' | '9' | '10'
 
-  // Count how many times each topic appeared in past papers
   const topicCounts = useMemo(() => {
     const counts = {};
     allQuestions.forEach(question => {
@@ -43,7 +42,6 @@ const UnseenTopics = ({
     return counts;
   }, [allQuestions, excludeSpecimen]);
 
-  // Count predicted questions per topic
   const predictedCounts = useMemo(() => {
     const counts = {};
     predictedQuestions.forEach(q => {
@@ -61,7 +59,6 @@ const UnseenTopics = ({
     return counts;
   }, [predictedQuestions]);
 
-  // Full syllabus matrix + unseen summary
   const syllabusMatrix = useMemo(() => {
     const result = {};
     let totalTopics = 0;
@@ -124,38 +121,37 @@ const UnseenTopics = ({
   return (
     <div className="max-w-6xl mx-auto w-full space-y-5 animate-fade-up">
       {/* Header Card */}
-      <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] p-5 sm:p-6">
+      <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] border-t-[3px] border-t-[var(--subject-biology)] p-5 sm:p-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div className="flex items-start gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[var(--accent-gold-soft)] text-[var(--accent-gold)] flex items-center justify-center flex-shrink-0">
-              <CompassIcon className="w-6 h-6" />
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-lg bg-[var(--subject-islam-bg)] border border-[var(--subject-islam-border)] text-[var(--subject-islam)] flex items-center justify-center shrink-0">
+              <CompassIcon className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="font-serif-editorial text-2xl sm:text-3xl font-semibold text-[var(--text-primary)]">
+              <h1 className="font-editorial text-2xl sm:text-3xl font-semibold text-[var(--ink-primary)]">
                 Unseen Topics &amp; Syllabus Coverage
               </h1>
-              <p className="text-sm text-[var(--text-secondary)] mt-1">
+              <p className="text-sm text-[var(--ink-secondary)] mt-1 max-w-[62ch]">
                 Identify topics that haven&apos;t appeared in{' '}
                 {excludeSpecimen ? 'actual exam papers' : 'past papers'} yet — click any topic to jump directly to predictions or revision tools.
               </p>
             </div>
           </div>
 
-          {/* Summary Stat Chips */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="px-4 py-2.5 rounded-xl bg-[var(--accent-gold-soft)] border border-[var(--accent-gold)]/25 text-center">
-              <div className="font-mono-code text-2xl font-bold text-[var(--accent-gold)]">
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="px-4 py-2 rounded-lg bg-[var(--subject-islam-bg)] border border-[var(--subject-islam-border)] text-center">
+              <div className="font-mono-code tabular-nums text-2xl font-semibold text-[var(--subject-islam)]">
                 {syllabusMatrix.totalUnseen}
               </div>
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
                 Unseen
               </div>
             </div>
-            <div className="px-4 py-2.5 rounded-xl bg-[var(--accent-primary-soft)] border border-[var(--accent-primary)]/25 text-center">
-              <div className="font-mono-code text-2xl font-bold text-[var(--accent-primary)]">
+            <div className="px-4 py-2 rounded-lg bg-[var(--subject-biology-bg)] border border-[var(--subject-biology-border)] text-center">
+              <div className="font-mono-code tabular-nums text-2xl font-semibold text-[var(--subject-biology)]">
                 {coveragePct}%
               </div>
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-secondary)]">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
                 Tested
               </div>
             </div>
@@ -164,16 +160,15 @@ const UnseenTopics = ({
 
         {/* Controls Bar */}
         <div className="mt-5 pt-4 border-t border-[var(--border-hairline)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          {/* View Tabs + Book Filter */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex p-1 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)]">
+            <div className="inline-flex p-0.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-warm-strong)]">
               <button
                 type="button"
                 onClick={() => setActiveTab('unseen')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
                   activeTab === 'unseen'
-                    ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-2xs'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                    : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                 }`}
               >
                 Unseen Only ({syllabusMatrix.totalUnseen})
@@ -181,17 +176,17 @@ const UnseenTopics = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('coverage')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
                   activeTab === 'coverage'
-                    ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-2xs'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                    : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                 }`}
               >
                 Full Syllabus Frequency ({syllabusMatrix.totalTopics})
               </button>
             </div>
 
-            <div className="inline-flex p-1 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)]">
+            <div className="inline-flex p-0.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-warm-strong)]">
               {[
                 { id: 'all', label: 'All Books' },
                 { id: '9', label: 'Book 9' },
@@ -201,10 +196,10 @@ const UnseenTopics = ({
                   key={b.id}
                   type="button"
                   onClick={() => setSelectedBookTab(b.id)}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
                     selectedBookTab === b.id
-                      ? 'bg-[var(--accent-primary)] text-white shadow-2xs'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                      ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                      : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                   }`}
                 >
                   {b.label}
@@ -213,28 +208,25 @@ const UnseenTopics = ({
             </div>
           </div>
 
-          {/* Exclude Specimen Toggle */}
           <label className="inline-flex items-center gap-3 cursor-pointer select-none">
             <button
               type="button"
               role="switch"
               aria-checked={excludeSpecimen}
               onClick={() => setExcludeSpecimen(prev => !prev)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                excludeSpecimen ? 'bg-[var(--accent-primary)]' : 'bg-[var(--border-strong)]'
+              className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors ${
+                excludeSpecimen ? 'bg-[var(--subject-biology)]' : 'bg-[var(--border-strong)]'
               }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-2xs ${
-                  excludeSpecimen ? 'translate-x-6' : 'translate-x-1'
+                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                  excludeSpecimen ? 'translate-x-5' : 'translate-x-1'
                 }`}
               />
             </button>
             <div className="text-xs">
-              <div className="font-semibold text-[var(--text-primary)]">
-                Exclude Specimen Papers
-              </div>
-              <div className="text-[11px] text-[var(--text-muted)]">
+              <div className="font-medium text-[var(--ink-primary)]">Exclude Specimen Papers</div>
+              <div className="text-[11px] text-[var(--ink-muted)]">
                 {excludeSpecimen ? 'Actual exams only' : 'Actual + Specimen'}
               </div>
             </div>
@@ -242,24 +234,25 @@ const UnseenTopics = ({
         </div>
       </div>
 
-      {/* Empty State when Unseen = 0 and on unseen tab */}
+      {/* Empty State */}
       {activeTab === 'unseen' && syllabusMatrix.totalUnseen === 0 ? (
-        <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] p-8 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-[var(--accent-primary-soft)] text-[var(--accent-primary)] flex items-center justify-center mx-auto mb-4">
-            <CheckIcon className="w-7 h-7" />
+        <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-8 text-center">
+          <div className="w-12 h-12 rounded-lg bg-[var(--subject-biology-bg)] border border-[var(--subject-biology-border)] text-[var(--subject-biology)] flex items-center justify-center mx-auto mb-4">
+            <CheckIcon className="w-6 h-6" />
           </div>
-          <h2 className="font-serif-editorial text-2xl font-semibold text-[var(--text-primary)] mb-2">
+          <h2 className="font-editorial text-2xl font-semibold text-[var(--ink-primary)] mb-2">
             {excludeSpecimen
-              ? 'All Topics Have Appeared in Actual Exams!'
-              : 'All Topics Have Appeared!'}
+              ? 'All Topics Have Appeared in Actual Exams'
+              : 'All Topics Have Appeared'}
           </h2>
-          <p className="text-sm text-[var(--text-secondary)] max-w-md mx-auto mb-5">
-            Every syllabus topic has appeared at least once. Switch to <strong>Full Syllabus Frequency</strong> above to spot low-frequency topics worth reviewing.
+          <p className="text-sm text-[var(--ink-secondary)] max-w-md mx-auto mb-5">
+            Every syllabus topic has appeared at least once. Switch to{' '}
+            <strong>Full Syllabus Frequency</strong> above to spot low-frequency topics worth reviewing.
           </p>
           <button
             type="button"
             onClick={() => setActiveTab('coverage')}
-            className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-primary-hover)] transition-colors"
+            className="px-5 py-2.5 rounded-lg text-sm font-medium bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] hover:bg-[var(--action-primary-hover)] transition-colors"
           >
             View Frequency Breakdown
           </button>
@@ -273,34 +266,32 @@ const UnseenTopics = ({
             return (
               <div
                 key={bookKey}
-                className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] overflow-hidden"
+                className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] overflow-hidden"
               >
-                {/* Book Header with Coverage Bar */}
-                <div className="px-5 py-4 border-b border-[var(--border-hairline)] bg-[var(--bg-subtle)]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="px-5 py-4 border-b border-[var(--border-hairline)] bg-[var(--bg-inset)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h2 className="font-serif-editorial text-xl font-semibold text-[var(--text-primary)]">
+                    <h2 className="font-editorial text-xl font-semibold text-[var(--ink-primary)]">
                       Book {bookKey} — Grade {bookKey} Syllabus
                     </h2>
-                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                      {bookData.unseen} unseen topic{bookData.unseen !== 1 ? 's' : ''} • {bookData.seen} of {bookData.total} topics tested
+                    <p className="text-xs text-[var(--ink-secondary)] mt-0.5 font-mono-code tabular-nums">
+                      {bookData.unseen} unseen topic{bookData.unseen !== 1 ? 's' : ''} · {bookData.seen} of {bookData.total} topics tested
                     </p>
                   </div>
 
                   <div className="w-full sm:w-52">
-                    <div className="flex justify-between text-[11px] font-mono-code font-semibold text-[var(--text-secondary)] mb-1">
+                    <div className="flex justify-between text-[11px] font-mono-code tabular-nums font-medium text-[var(--ink-secondary)] mb-1">
                       <span>Coverage</span>
                       <span>{bookPct}%</span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-[var(--border-hairline)] overflow-hidden">
+                    <div className="w-full h-1.5 rounded-full bg-[var(--border-hairline)] overflow-hidden">
                       <div
-                        className="h-full bg-[var(--accent-primary)] rounded-full transition-all duration-500"
+                        className="h-full bg-[var(--subject-biology)] rounded-full transition-all duration-300"
                         style={{ width: `${bookPct}%` }}
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Units */}
                 <div className="p-5 space-y-6">
                   {Object.keys(bookData.units).map(unitKey => {
                     const unitData = bookData.units[unitKey];
@@ -315,14 +306,14 @@ const UnseenTopics = ({
                       <div key={unitKey}>
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                           <div className="flex items-center gap-2.5">
-                            <span className="font-mono-code text-xs font-bold px-2 py-1 rounded-lg bg-[var(--accent-primary-soft)] text-[var(--accent-primary)]">
+                            <span className="font-mono-code tabular-nums text-xs font-semibold px-2 py-0.5 rounded bg-[var(--subject-biology-bg)] text-[var(--subject-biology)] border border-[var(--subject-biology-border)]">
                               Unit {unitKey}
                             </span>
-                            <h3 className="font-serif-editorial text-lg font-semibold text-[var(--text-primary)]">
+                            <h3 className="font-editorial text-lg font-semibold text-[var(--ink-primary)]">
                               {unitNames[unitKey] || `Unit ${unitKey}`}
                             </h3>
                           </div>
-                          <span className="font-mono-code text-xs text-[var(--text-muted)]">
+                          <span className="font-mono-code tabular-nums text-xs text-[var(--ink-muted)]">
                             {unitData.seen}/{unitData.total} tested
                           </span>
                         </div>
@@ -335,25 +326,25 @@ const UnseenTopics = ({
                             return (
                               <div
                                 key={topic.id}
-                                className={`rounded-xl p-4 border flex flex-col justify-between gap-3 transition-all ${
+                                className={`rounded-lg p-4 border flex flex-col justify-between gap-3 transition-colors ${
                                   isUnseen
-                                    ? 'bg-[var(--accent-gold-soft)]/60 border-[var(--accent-gold)]/35'
-                                    : 'bg-[var(--bg-canvas)] border-[var(--border-hairline)]'
+                                    ? 'bg-[var(--subject-islam-bg)] border-[var(--subject-islam-border)]'
+                                    : 'bg-[var(--bg-inset)] border-[var(--border-hairline)]'
                                 }`}
                               >
                                 <div>
                                   <div className="flex items-center justify-between gap-2 mb-2">
-                                    <span className="font-mono-code text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--text-secondary)]">
+                                    <span className="font-mono-code tabular-nums text-[11px] font-medium px-2 py-0.5 rounded bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--ink-secondary)]">
                                       Topic {topic.id}
                                     </span>
 
                                     <span
-                                      className={`font-mono-code text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                                      className={`font-mono-code tabular-nums text-[11px] font-semibold px-2 py-0.5 rounded ${
                                         isUnseen
-                                          ? 'bg-[var(--accent-gold)] text-white'
+                                          ? 'bg-[var(--subject-islam)] text-white'
                                           : isRare
-                                          ? 'bg-amber-500/15 text-[var(--accent-gold)]'
-                                          : 'bg-[var(--accent-primary-soft)] text-[var(--accent-primary)]'
+                                          ? 'bg-[var(--subject-islam-bg)] text-[var(--subject-islam)] border border-[var(--subject-islam-border)]'
+                                          : 'bg-[var(--subject-biology-bg)] text-[var(--subject-biology)] border border-[var(--subject-biology-border)]'
                                       }`}
                                     >
                                       {isUnseen ? 'Unseen (0×)' : `${topic.appearances}× tested`}
@@ -362,14 +353,13 @@ const UnseenTopics = ({
 
                                   <SmartText
                                     as="p"
-                                    className="text-sm sm:text-base font-medium text-[var(--text-primary)] text-right w-full leading-[2]"
+                                    className="text-sm sm:text-base font-medium text-[var(--ink-primary)] text-right w-full leading-[2]"
                                   >
                                     {topic.name}
                                   </SmartText>
                                 </div>
 
-                                {/* Interactive Topic Action Pills */}
-                                <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[var(--border-hairline)]/70">
+                                <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[var(--border-hairline)]">
                                   {topic.appearances > 0 && onOpenPastPapers && (
                                     <button
                                       type="button"
@@ -380,10 +370,12 @@ const UnseenTopics = ({
                                           topic: [String(topic.id)],
                                         })
                                       }
-                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold bg-[var(--accent-primary-soft)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:text-white transition-colors"
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-[var(--subject-biology-bg)] text-[var(--subject-biology)] border border-[var(--subject-biology-border)] hover:bg-[var(--subject-biology)] hover:text-white transition-colors"
                                     >
                                       <BookOpenIcon className="w-3 h-3" />
-                                      <span>{topic.appearances} Past Q{topic.appearances !== 1 ? 's' : ''}</span>
+                                      <span>
+                                        {topic.appearances} Past Q{topic.appearances !== 1 ? 's' : ''}
+                                      </span>
                                     </button>
                                   )}
 
@@ -397,7 +389,7 @@ const UnseenTopics = ({
                                           topic: [String(topic.id)],
                                         })
                                       }
-                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold bg-[var(--accent-gold-soft)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/25 hover:bg-[var(--accent-gold)] hover:text-white transition-colors"
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-[var(--subject-islam-bg)] text-[var(--subject-islam)] border border-[var(--subject-islam-border)] hover:bg-[var(--subject-islam)] hover:text-white transition-colors"
                                     >
                                       <SparklesIcon className="w-3 h-3" />
                                       <span>{topic.predictedCount} Predicted</span>
@@ -413,7 +405,7 @@ const UnseenTopics = ({
                                           unit: [parseInt(unitKey, 10)],
                                         })
                                       }
-                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] transition-colors"
                                     >
                                       <ScrollTextIcon className="w-3 h-3" />
                                       <span>Definitions</span>
@@ -424,7 +416,7 @@ const UnseenTopics = ({
                                     <button
                                       type="button"
                                       onClick={onOpenTextbooks}
-                                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                                      className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] transition-colors"
                                     >
                                       <BookOpenIcon className="w-3 h-3" />
                                       <span>Textbook</span>

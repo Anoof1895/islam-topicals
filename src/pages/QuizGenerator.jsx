@@ -651,8 +651,8 @@ const QuizGenerator = ({
 
         {/* End Quiz Confirmation Modal */}
         {confirmEndOpen && (
-          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="w-full max-w-sm rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-6 shadow-2xl animate-fade-up">
+          <div className="fixed inset-0 z-50 bg-slate-950/45 flex items-center justify-center p-4">
+            <div className="w-full max-w-sm rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-6 shadow-[var(--shadow-popover)] animate-fade-up">
               <h3 className="font-serif-editorial text-xl font-semibold text-[var(--text-primary)] mb-2">
                 End current quiz?
               </h3>
@@ -937,9 +937,9 @@ const QuizGenerator = ({
             type="button"
             onClick={() => generateQuiz()}
             disabled={matchingPool.length === 0}
-            className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-sm sm:text-base font-semibold bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-sm font-medium bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] hover:bg-[var(--action-primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            <TargetIcon className="w-5 h-5" />
+            <TargetIcon className="w-4 h-4" />
             <span>Start Practice Quiz</span>
           </button>
         </div>

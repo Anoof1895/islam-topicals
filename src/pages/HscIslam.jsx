@@ -139,19 +139,19 @@ const HscFlashcard = ({ term, paragraphs, large = false, isFlipped: controlledFl
         }`}
       >
         {/* Front Face */}
-        <div className="absolute inset-0 backface-hidden rounded-2xl bg-[var(--bg-surface)] border-2 border-[var(--accent-gold)]/55 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] p-6 sm:p-8 flex flex-col items-center justify-center text-center gap-4 transition-shadow">
-          <span className="text-[11px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[var(--accent-gold-soft)] text-[var(--accent-gold)]">
+        <div className="absolute inset-0 backface-hidden rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] border-t-[3px] border-t-[var(--subject-islam)] hover:border-[var(--subject-islam)]/60 p-6 sm:p-8 flex flex-col items-center justify-center text-center gap-4 transition-colors">
+          <span className="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded bg-[var(--subject-islam-bg)] text-[var(--subject-islam)] border border-[var(--subject-islam-border)]">
             Term
           </span>
           <h3
-            className={`dhivehi-text font-bold text-[var(--text-primary)] leading-[2] ${
+            className={`dhivehi-text font-bold text-[var(--ink-primary)] leading-[2] ${
               large ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'
             }`}
             dir="rtl"
           >
             {cleanText(term)}
           </h3>
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)] bg-[var(--bg-subtle)] px-3 py-1 rounded-full">
+          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--ink-muted)] bg-[var(--bg-inset)] border border-[var(--border-hairline)] px-3 py-1 rounded-md">
             <FlipIcon className="w-3.5 h-3.5" />
             <span>{large ? 'Click or press Space to flip' : 'Tap to reveal'}</span>
           </span>
@@ -159,17 +159,17 @@ const HscFlashcard = ({ term, paragraphs, large = false, isFlipped: controlledFl
 
         {/* Back Face */}
         <div
-          className="absolute inset-0 backface-hidden rotate-y-180 rounded-2xl bg-[var(--bg-elevated)] border-2 border-[var(--accent-primary)] shadow-[var(--shadow-elevated)] p-6 sm:p-8 flex flex-col justify-center overflow-y-auto scholar-scroll"
+          className="absolute inset-0 backface-hidden rotate-y-180 rounded-lg bg-[var(--bg-inset)] border border-[var(--subject-islam)] border-t-[3px] border-t-[var(--subject-islam)] p-6 sm:p-8 flex flex-col justify-center overflow-y-auto scholar-scroll"
           dir="rtl"
         >
           <div className="space-y-3 text-center">
-            <div className="dhivehi-text text-sm font-bold text-[var(--accent-primary)] opacity-80">
+            <div className="dhivehi-text text-sm font-bold text-[var(--subject-islam)]">
               {cleanText(term)}
             </div>
             {paragraphs.map((paragraph, idx) => (
               <p
                 key={idx}
-                className={`dhivehi-text text-[var(--text-primary)] leading-[2.1] ${
+                className={`dhivehi-text text-[var(--ink-primary)] leading-[2.15] ${
                   large ? 'text-lg sm:text-xl' : 'text-base sm:text-lg'
                 }`}
               >
@@ -188,18 +188,18 @@ const AccordionCard = ({ badgeLabel, variant = 'def', title, children, isOpen, o
 
   return (
     <div
-      className={`rounded-2xl bg-[var(--bg-surface)] border transition-all duration-200 overflow-hidden shadow-[var(--shadow-card)] ${
+      className={`rounded-lg bg-[var(--bg-surface)] border transition-colors duration-150 overflow-hidden ${
         isOpen
           ? isDef
-            ? 'border-[var(--accent-gold)]/55'
-            : 'border-[var(--accent-primary)]/55'
+            ? 'border-[var(--subject-islam)]/65'
+            : 'border-[var(--subject-biology)]/65'
           : 'border-[var(--border-hairline)] hover:border-[var(--border-strong)]'
       }`}
     >
-      {/* Subtle Top Accent Bar */}
+      {/* Canonical 2px Top Accent Rule */}
       <div
-        className={`h-1 w-full ${
-          isDef ? 'bg-[var(--accent-gold)]' : 'bg-[var(--accent-primary)]'
+        className={`h-[2px] w-full ${
+          isDef ? 'bg-[var(--subject-islam)]' : 'bg-[var(--subject-biology)]'
         }`}
       />
 
@@ -207,26 +207,26 @@ const AccordionCard = ({ badgeLabel, variant = 'def', title, children, isOpen, o
         type="button"
         onClick={onToggle}
         dir="rtl"
-        className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 text-right hover:bg-[var(--bg-subtle)]/50 transition-colors"
+        className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 text-right hover:bg-[var(--bg-inset)] transition-colors"
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <span
-            className={`flex-shrink-0 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+            className={`shrink-0 px-2 py-0.5 rounded text-xs font-semibold border ${
               isDef
-                ? 'arabic-text bg-[var(--accent-gold-soft)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/25'
-                : 'dhivehi-text bg-[var(--accent-primary-soft)] text-[var(--accent-primary)] border border-[var(--accent-primary)]/25'
+                ? 'arabic-text bg-[var(--subject-islam-bg)] text-[var(--subject-islam)] border-[var(--subject-islam-border)]'
+                : 'dhivehi-text bg-[var(--subject-biology-bg)] text-[var(--subject-biology)] border-[var(--subject-biology-border)]'
             }`}
           >
             {badgeLabel}
           </span>
-          <h3 className="dhivehi-text text-base sm:text-lg font-bold text-[var(--text-primary)] leading-[1.9] text-right">
+          <h3 className="dhivehi-text text-base sm:text-lg font-bold text-[var(--ink-primary)] leading-[1.95] text-right">
             {cleanText(title)}
           </h3>
         </div>
 
         <ChevronDownIcon
-          className={`w-5 h-5 flex-shrink-0 text-[var(--text-muted)] transition-transform duration-200 ${
-            isOpen ? 'rotate-180 text-[var(--text-primary)]' : ''
+          className={`w-4 h-4 shrink-0 text-[var(--ink-muted)] transition-transform duration-150 ${
+            isOpen ? 'rotate-180 text-[var(--ink-primary)]' : ''
           }`}
         />
       </button>
@@ -234,7 +234,7 @@ const AccordionCard = ({ badgeLabel, variant = 'def', title, children, isOpen, o
       {isOpen && (
         <div
           dir="rtl"
-          className="px-5 sm:px-6 pb-5 pt-2 border-t border-[var(--border-hairline)]/70 animate-fade-up"
+          className="px-5 sm:px-6 pb-5 pt-3 border-t border-[var(--border-hairline)] bg-[var(--bg-inset)]/45 animate-fade-up"
         >
           {children}
         </div>
@@ -499,13 +499,21 @@ const SpecimenExamView = ({ onOpenPdf, onOpenModule }) => {
                     <div className="space-y-2 pt-2 border-t border-[var(--border-hairline)] animate-fade-up">
                       <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                         <span
-                          className={`dhivehi-text font-bold ${
-                            isCorrect ? 'text-[var(--accent-primary)]' : 'text-red-500'
+                          className={`dhivehi-text inline-flex items-center gap-1.5 font-bold ${
+                            isCorrect ? 'text-[var(--subject-biology)]' : 'text-red-600 dark:text-red-400'
                           }`}
                         >
-                          {isCorrect
-                            ? '✓ ރަނގަޅު ޖަވާބު!'
-                            : `✗ ރަނގަޅު ޖަވާބަކީ "${q.answer}" އެވެ.`}
+                          {isCorrect ? (
+                            <>
+                              <CheckIcon className="w-4 h-4 shrink-0" />
+                              <span>ރަނގަޅު ޖަވާބު!</span>
+                            </>
+                          ) : (
+                            <>
+                              <XIcon className="w-4 h-4 shrink-0" />
+                              <span>{`ރަނގަޅު ޖަވާބަކީ "${q.answer}" އެވެ.`}</span>
+                            </>
+                          )}
                         </span>
                         <span className="dhivehi-text text-[var(--text-muted)]">
                           {q.outcomeNote}
@@ -912,33 +920,33 @@ export default function HscIslam({
                   key={doc.id}
                   type="button"
                   onClick={() => setSelectedPdfId(doc.id)}
-                  className={`rounded-2xl p-4 text-left border transition-all flex flex-col justify-between gap-2 ${
+                  className={`rounded-lg p-4 text-left border transition-colors flex flex-col justify-between gap-2 ${
                     isSelected
-                      ? 'bg-[var(--bg-surface)] border-[var(--accent-primary)] ring-2 ring-[var(--accent-primary)]/15 shadow-[var(--shadow-card)]'
+                      ? 'bg-[var(--bg-surface)] border-[var(--subject-islam)] border-t-[3px] border-t-[var(--subject-islam)]'
                       : 'bg-[var(--bg-surface)] border-[var(--border-hairline)] hover:border-[var(--border-strong)]'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span
-                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                      className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
                         isSelected
-                          ? 'bg-[var(--accent-primary)] text-white'
-                          : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)]'
+                          ? 'bg-[var(--subject-islam)] text-white'
+                          : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)]'
                       }`}
                     >
                       {doc.badge}
                     </span>
-                    <span className="font-mono-code text-[11px] text-[var(--text-muted)] truncate">
+                    <span className="font-mono-code tabular-nums text-[11px] text-[var(--ink-muted)] truncate">
                       {doc.meta.split('•')[0].trim()}
                     </span>
                   </div>
 
                   <div className="space-y-1">
-                    <h3 className="text-sm font-bold text-[var(--text-primary)] leading-snug">
+                    <h3 className="text-sm font-semibold text-[var(--ink-primary)] leading-snug">
                       {doc.title}
                     </h3>
                     <p
-                      className="dhivehi-text text-xs text-[var(--text-secondary)] text-right leading-[1.8]"
+                      className="dhivehi-text text-xs text-[var(--ink-secondary)] text-right leading-[1.85]"
                       dir="rtl"
                     >
                       {doc.subtitle}
@@ -950,18 +958,16 @@ export default function HscIslam({
           </div>
 
           {/* Active PDF Toolbar */}
-          <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[var(--accent-primary-soft)] text-[var(--accent-primary)] flex items-center justify-center flex-shrink-0">
-                <LibraryIcon className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-md bg-[var(--subject-islam-bg)] border border-[var(--subject-islam-border)] text-[var(--subject-islam)] flex items-center justify-center shrink-0">
+                <LibraryIcon className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="font-serif-editorial text-lg sm:text-xl font-semibold text-[var(--text-primary)]">
+                <h2 className="font-editorial text-lg sm:text-xl font-semibold text-[var(--ink-primary)]">
                   {selectedDoc.title}
                 </h2>
-                <p className="text-xs text-[var(--text-secondary)]">
-                  {selectedDoc.meta}
-                </p>
+                <p className="text-xs text-[var(--ink-secondary)]">{selectedDoc.meta}</p>
               </div>
             </div>
 
@@ -970,7 +976,7 @@ export default function HscIslam({
                 <button
                   type="button"
                   onClick={() => setSelectedPdfId(selectedDoc.pairId)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[var(--accent-gold-soft)] border border-[var(--accent-gold)]/40 text-[var(--accent-gold)] hover:opacity-90 transition-opacity"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--subject-islam-bg)] border border-[var(--subject-islam-border)] text-[var(--subject-islam)] hover:opacity-90 transition-opacity"
                 >
                   <FlipIcon className="w-3.5 h-3.5" />
                   <span>{selectedDoc.pairLabel}</span>
@@ -981,7 +987,7 @@ export default function HscIslam({
                 <button
                   type="button"
                   onClick={() => setActiveTab('specimen')}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[var(--accent-primary-soft)] border border-[var(--accent-primary)]/30 text-[var(--accent-primary)] hover:opacity-90 transition-opacity"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--subject-biology-bg)] border border-[var(--subject-biology-border)] text-[var(--subject-biology)] hover:opacity-90 transition-opacity"
                 >
                   <ScrollTextIcon className="w-3.5 h-3.5" />
                   <span>Interactive Specimen Practice</span>
@@ -991,7 +997,7 @@ export default function HscIslam({
                 href={safePdfUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--border-strong)] transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-primary)] hover:border-[var(--border-strong)] transition-colors"
               >
                 <ExternalLinkIcon className="w-3.5 h-3.5" />
                 <span>Open in New Tab</span>
@@ -999,7 +1005,7 @@ export default function HscIslam({
               <a
                 href={safePdfUrl}
                 download
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-primary-hover)] transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] hover:bg-[var(--action-primary-hover)] transition-colors"
               >
                 <DownloadIcon className="w-3.5 h-3.5" />
                 <span>Download PDF</span>
@@ -1007,12 +1013,12 @@ export default function HscIslam({
             </div>
           </div>
 
-          <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] p-2 sm:p-3 overflow-hidden">
+          <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-2 sm:p-3 overflow-hidden">
             <iframe
               key={selectedDoc.id}
               src={safePdfUrl}
               title={selectedDoc.title}
-              className="w-full h-[640px] lg:h-[75vh] rounded-xl border border-[var(--border-hairline)] bg-white block"
+              className="w-full h-[640px] lg:h-[75vh] rounded-md border border-[var(--border-hairline)] bg-white block"
             />
           </div>
         </div>
@@ -1028,9 +1034,9 @@ export default function HscIslam({
 
       return (
         <div className="max-w-3xl mx-auto py-4 space-y-5 animate-fade-up">
-          {/* Fact Source Filter Pills */}
+          {/* Fact Source Filter Segmented Control */}
           <div className="flex justify-center">
-            <div className="inline-flex flex-wrap items-center justify-center gap-1 p-1.5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)]">
+            <div className="inline-flex flex-wrap items-center justify-center gap-1 p-1 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-warm-strong)]">
               {[
                 { id: 'all', label: `All HSC Facts (${mod1Count + mod2Count})` },
                 { id: 'mod1', label: `Module 1: Aqeedha (${mod1Count})` },
@@ -1040,10 +1046,10 @@ export default function HscIslam({
                   key={item.id}
                   type="button"
                   onClick={() => setFactModuleFilter(item.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                     factModuleFilter === item.id
-                      ? 'bg-[var(--accent-primary)] text-white shadow-2xs'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]'
+                      ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                      : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-subtle)]'
                   }`}
                 >
                   {item.label}
@@ -1053,53 +1059,53 @@ export default function HscIslam({
           </div>
 
           {!currentFact ? (
-            <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-10 text-center text-[var(--text-secondary)]">
+            <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-10 text-center text-[var(--ink-secondary)]">
               No facts available.
             </div>
           ) : (
             <>
               <div
-                className="rounded-2xl border-2 border-[var(--accent-gold)]/60 bg-[var(--bg-surface)] p-1.5 shadow-[var(--shadow-elevated)]"
+                className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] border-t-[3px] border-t-[var(--subject-islam)] overflow-hidden"
                 dir="rtl"
               >
-                <div className="rounded-xl border border-[var(--accent-gold)]/35 bg-[var(--bg-elevated)] overflow-hidden">
-                  {/* Illuminated Manuscript Header */}
-                  <div className="px-6 py-4 bg-[var(--accent-primary)] text-white flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <RubElHizbIcon className="w-6 h-6 text-[var(--accent-gold)]" />
-                      <div>
-                        <h2 className="dhivehi-text text-xl sm:text-2xl font-bold leading-tight">
-                          ތިޔަދަރިވަރުންނަށް އެނގޭތަ!
-                        </h2>
-                        <div className="dhivehi-text text-xs text-white/80">
-                          {currentFact.moduleLabel}
-                        </div>
+                {/* Scholarly Header */}
+                <div className="px-5 sm:px-6 py-4 bg-[var(--bg-surface)] border-b border-[var(--border-hairline)] flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-md bg-[var(--subject-islam-bg)] border border-[var(--subject-islam-border)] text-[var(--subject-islam)] flex items-center justify-center shrink-0">
+                      <RubElHizbIcon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h2 className="dhivehi-text text-lg sm:text-xl font-bold text-[var(--ink-primary)] leading-tight">
+                        ތިޔަދަރިވަރުންނަށް އެނގޭތަ!
+                      </h2>
+                      <div className="dhivehi-text text-xs text-[var(--ink-muted)]">
+                        {currentFact.moduleLabel}
                       </div>
                     </div>
-                    <span
-                      className="font-mono-code text-xs px-2.5 py-1 rounded-full bg-white/15 text-white"
-                      dir="ltr"
-                    >
-                      {safeIdx + 1} / {factPool.length}
-                    </span>
                   </div>
+                  <span
+                    className="font-mono-code tabular-nums text-xs px-2.5 py-0.5 rounded bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-secondary)]"
+                    dir="ltr"
+                  >
+                    {safeIdx + 1} / {factPool.length}
+                  </span>
+                </div>
 
-                  {/* Fact Body */}
-                  <div className="px-6 sm:px-10 py-10 sm:py-14 text-center">
-                    <p className="dhivehi-text text-xl sm:text-2xl text-[var(--text-primary)] leading-[2.3]">
-                      {cleanText(currentFact.text)}
-                    </p>
-                  </div>
+                {/* Fact Inset Body */}
+                <div className="px-6 sm:px-10 py-10 sm:py-14 text-center bg-[var(--bg-inset)]">
+                  <p className="dhivehi-text text-xl sm:text-2xl text-[var(--ink-primary)] leading-[2.3]">
+                    {cleanText(currentFact.text)}
+                  </p>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-2.5">
                 <button
                   type="button"
                   onClick={() =>
                     setCurrentFactIndex(prev => (prev > 0 ? prev - 1 : factPool.length - 1))
                   }
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--border-strong)] transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--ink-primary)] hover:border-[var(--border-strong)] transition-colors"
                 >
                   <ChevronLeftIcon className="w-4 h-4" />
                   <span>Previous</span>
@@ -1107,7 +1113,7 @@ export default function HscIslam({
                 <button
                   type="button"
                   onClick={generateRandomFact}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold bg-[var(--accent-primary)] text-white hover:bg-[var(--accent-primary-hover)] transition-colors shadow-xs"
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] hover:bg-[var(--action-primary-hover)] transition-colors"
                 >
                   <ShuffleIcon className="w-4 h-4" />
                   <span>Random Fact</span>
@@ -1117,7 +1123,7 @@ export default function HscIslam({
                   onClick={() =>
                     setCurrentFactIndex(prev => (prev < factPool.length - 1 ? prev + 1 : 0))
                   }
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--text-primary)] hover:border-[var(--border-strong)] transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--ink-primary)] hover:border-[var(--border-strong)] transition-colors"
                 >
                   <span>Next</span>
                   <ChevronRightIcon className="w-4 h-4" />
@@ -1156,20 +1162,20 @@ export default function HscIslam({
       <div className="space-y-4 animate-fade-up">
         {/* RTL Search Bar */}
         <div className="relative">
-          <SearchIcon className="w-4 h-4 text-[var(--text-muted)] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <SearchIcon className="w-4 h-4 text-[var(--ink-muted)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             placeholder="ނޯޓުތަކާއި ތަޢުރީފުތައް ހޯއްދަވާ..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             dir="rtl"
-            className="dhivehi-text w-full pl-11 pr-10 py-3 rounded-2xl border border-[var(--border-hairline)] bg-[var(--bg-surface)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] text-base shadow-[var(--shadow-card)] focus:outline-none focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary)]/15 transition-all"
+            className="dhivehi-text w-full pl-10 pr-4 py-2.5 rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-surface)] text-[var(--ink-primary)] placeholder:text-[var(--ink-muted)] text-base focus:outline-none focus:border-[var(--subject-islam)] transition-colors"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute left-10 top-1/2 -translate-y-1/2 p-1 text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+              className="absolute left-9 top-1/2 -translate-y-1/2 p-1 text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
               title="Clear search"
             >
               <XIcon className="w-4 h-4" />
@@ -1177,10 +1183,10 @@ export default function HscIslam({
           )}
         </div>
 
-        {/* Module 2 Strand Filter Pill Bar */}
+        {/* Module 2 Strand Filter Bar */}
         {activeTab === 'mod2' && (
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] px-4 py-2.5 shadow-[var(--shadow-card)]">
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] px-4 py-2.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
               Module 2 Strands
             </span>
             <div className="flex flex-wrap items-center gap-1.5" dir="rtl">
@@ -1195,12 +1201,12 @@ export default function HscIslam({
                     key={String(st.id)}
                     type="button"
                     onClick={() => setMod2Strand(st.id)}
-                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all border ${
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition-colors border ${
                       st.isDhivehi ? 'dhivehi-text' : ''
                     } ${
                       active
-                        ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)] shadow-2xs'
-                        : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)] border-[var(--border-hairline)] hover:text-[var(--text-primary)]'
+                        ? 'bg-[var(--subject-islam)] text-white border-[var(--subject-islam)]'
+                        : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:text-[var(--ink-primary)]'
                     }`}
                   >
                     {st.label}
@@ -1212,23 +1218,33 @@ export default function HscIslam({
         )}
 
         {/* Mobile Quick Topic Picker Bar */}
-        <div className="lg:hidden rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-3 space-y-2.5">
+        <div className="lg:hidden rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-3 space-y-2.5 max-w-full overflow-hidden">
           <div className="flex items-center justify-between gap-2">
-            <div className="text-xs font-semibold text-[var(--text-secondary)]">
-              Mastery: <span className="font-mono-code text-[var(--accent-primary)]">{progressPercent}%</span> ({masteredInModule}/{moduleTopics.length})
+            <div className="text-xs font-medium text-[var(--ink-secondary)]">
+              Mastery:{' '}
+              <span className="font-mono-code tabular-nums font-semibold text-[var(--subject-islam)]">
+                {progressPercent}%
+              </span>{' '}
+              <span className="font-mono-code tabular-nums">
+                ({masteredInModule}/{moduleTopics.length})
+              </span>
             </div>
             <button
               type="button"
               onClick={() => setMobileTopicDrawerOpen(prev => !prev)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[var(--accent-primary-soft)] text-[var(--accent-primary)]"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-[var(--subject-islam-bg)] border border-[var(--subject-islam-border)] text-[var(--subject-islam)] shrink-0"
             >
               <span>All Topics ({displayedTopics.length})</span>
-              <ChevronDownIcon className={`w-3.5 h-3.5 transition-transform ${mobileTopicDrawerOpen ? 'rotate-180' : ''}`} />
+              <ChevronDownIcon
+                className={`w-3.5 h-3.5 transition-transform ${
+                  mobileTopicDrawerOpen ? 'rotate-180' : ''
+                }`}
+              />
             </button>
           </div>
 
           {/* Horizontal scrollable pills */}
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1" dir="rtl">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5 max-w-full" dir="rtl">
             {displayedTopics.map((topic, idx) => {
               const active = activeTopicTitle === topic.topicTitle;
               const mastered = masteredTopics.includes(topic.topicTitle);
@@ -1237,15 +1253,15 @@ export default function HscIslam({
                   key={topic.topicTitle || idx}
                   type="button"
                   onClick={() => setActiveTopicTitle(topic.topicTitle)}
-                  className={`dhivehi-text flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm transition-all border ${
+                  className={`dhivehi-text shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-sm transition-colors border whitespace-nowrap ${
                     active
-                      ? 'bg-[var(--accent-primary)] text-white border-[var(--accent-primary)] font-bold'
+                      ? 'bg-[var(--subject-islam)] text-white border-[var(--subject-islam)] font-bold'
                       : mastered
-                      ? 'bg-[var(--accent-primary-soft)] text-[var(--accent-primary)] border-[var(--accent-primary)]/30'
-                      : 'bg-[var(--bg-subtle)] text-[var(--text-primary)] border-[var(--border-hairline)]'
+                      ? 'bg-[var(--subject-biology-bg)] text-[var(--subject-biology)] border-[var(--subject-biology-border)]'
+                      : 'bg-[var(--bg-inset)] text-[var(--ink-primary)] border-[var(--border-hairline)]'
                   }`}
                 >
-                  {mastered && <CheckIcon className="w-3.5 h-3.5 flex-shrink-0" />}
+                  {mastered && <CheckIcon className="w-3.5 h-3.5 shrink-0" />}
                   <span>{cleanText(topic.topicTitle)}</span>
                 </button>
               );
@@ -1253,7 +1269,10 @@ export default function HscIslam({
           </div>
 
           {mobileTopicDrawerOpen && (
-            <div className="pt-2 border-t border-[var(--border-hairline)] max-h-64 overflow-y-auto space-y-1 scholar-scroll" dir="rtl">
+            <div
+              className="pt-2 border-t border-[var(--border-hairline)] max-h-64 overflow-y-auto space-y-1 scholar-scroll"
+              dir="rtl"
+            >
               {displayedTopics.map((topic, idx) => {
                 const active = activeTopicTitle === topic.topicTitle;
                 const mastered = masteredTopics.includes(topic.topicTitle);
@@ -1265,14 +1284,16 @@ export default function HscIslam({
                       setActiveTopicTitle(topic.topicTitle);
                       setMobileTopicDrawerOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-right dhivehi-text text-sm transition-colors ${
+                    className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-md text-right dhivehi-text text-sm transition-colors ${
                       active
-                        ? 'bg-[var(--accent-primary-soft)] text-[var(--accent-primary)] font-bold'
-                        : 'text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]'
+                        ? 'bg-[var(--subject-islam-bg)] text-[var(--subject-islam)] font-bold'
+                        : 'text-[var(--ink-primary)] hover:bg-[var(--bg-subtle)]'
                     }`}
                   >
                     <span>{cleanText(topic.topicTitle)}</span>
-                    {mastered && <CheckIcon className="w-4 h-4 text-[var(--accent-primary)] flex-shrink-0" />}
+                    {mastered && (
+                      <CheckIcon className="w-4 h-4 text-[var(--subject-biology)] shrink-0" />
+                    )}
                   </button>
                 );
               })}
@@ -1280,33 +1301,39 @@ export default function HscIslam({
           )}
         </div>
 
-        {/* Desktop Master-Detail Layout (RTL Sidebar on Right) */}
+        {/* Desktop Master-Detail Layout (RTL Syllabus Rail on Right) */}
         <div className="flex flex-col lg:flex-row-reverse gap-5 items-start">
-          {/* Sticky RTL Sidebar (Desktop) */}
+          {/* Sticky RTL Syllabus Topics Rail (Desktop) */}
           <aside
-            className="hidden lg:flex flex-col w-80 xl:w-[340px] flex-shrink-0 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] overflow-hidden sticky top-20 max-h-[calc(100vh-6.5rem)]"
+            className="hidden lg:flex flex-col w-80 xl:w-[340px] flex-shrink-0 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] overflow-hidden sticky top-[72px] max-h-[calc(100dvh-5.5rem)]"
             dir="rtl"
           >
-            <div className="px-4 py-3.5 border-b border-[var(--border-hairline)] bg-[var(--bg-subtle)]/55 flex items-center justify-between" dir="ltr">
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+            <div
+              className="px-4 py-3 border-b border-[var(--border-hairline)] bg-[var(--bg-inset)] flex items-center justify-between"
+              dir="ltr"
+            >
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">
                 Syllabus Topics
               </span>
-              <span className="font-mono-code text-xs font-bold px-2.5 py-0.5 rounded-full bg-[var(--accent-primary)] text-white">
+              <span className="font-mono-code tabular-nums text-xs font-medium px-2 py-0.5 rounded bg-[var(--subject-islam-bg)] text-[var(--subject-islam)] border border-[var(--subject-islam-border)]">
                 {displayedTopics.length}
               </span>
             </div>
 
             {/* Mastery Progress */}
-            <div className="px-4 py-3 border-b border-[var(--border-hairline)] bg-[var(--bg-subtle)]/30" dir="ltr">
-              <div className="flex justify-between text-xs font-semibold text-[var(--text-secondary)] mb-1.5">
+            <div
+              className="px-4 py-3 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)]"
+              dir="ltr"
+            >
+              <div className="flex justify-between text-xs font-medium text-[var(--ink-secondary)] mb-1.5">
                 <span>Module Mastery</span>
-                <span className="font-mono-code text-[var(--accent-primary)]">
+                <span className="font-mono-code tabular-nums text-[var(--subject-islam)]">
                   {masteredInModule}/{moduleTopics.length} ({progressPercent}%)
                 </span>
               </div>
-              <div className="w-full h-2 rounded-full bg-[var(--border-hairline)] overflow-hidden">
+              <div className="w-full h-1.5 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
                 <div
-                  className="h-full bg-[var(--accent-primary)] rounded-full transition-all duration-500"
+                  className="h-full bg-[var(--subject-islam)] rounded-full transition-all duration-300"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
@@ -1324,32 +1351,36 @@ export default function HscIslam({
                       setActiveTopicTitle(topic.topicTitle);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className={`w-full flex items-center justify-between gap-2.5 text-right px-3.5 py-2.5 rounded-xl dhivehi-text text-[15px] leading-[1.9] transition-all ${
+                    className={`w-full flex items-center justify-between gap-2.5 text-right px-3 py-2 rounded-md dhivehi-text text-[15px] leading-[1.9] transition-colors ${
                       active
-                        ? 'bg-[var(--accent-primary-soft)] text-[var(--accent-primary)] font-bold border-r-4 border-[var(--accent-primary)]'
+                        ? 'bg-[var(--subject-islam-bg)] text-[var(--subject-islam)] font-bold border-r-[3px] border-[var(--subject-islam)]'
                         : mastered
-                        ? 'text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)]'
-                        : 'text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]'
+                        ? 'text-[var(--ink-secondary)] hover:bg-[var(--bg-inset)]'
+                        : 'text-[var(--ink-primary)] hover:bg-[var(--bg-inset)]'
                     }`}
                   >
                     <span className="flex-1 text-right">{cleanText(topic.topicTitle)}</span>
                     <span
-                      className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
                         mastered
-                          ? 'bg-[var(--accent-primary)] text-white'
+                          ? 'bg-[var(--subject-biology)] text-white'
                           : active
-                          ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)]'
-                          : 'bg-[var(--bg-subtle)] text-[var(--text-muted)]'
+                          ? 'bg-[var(--subject-islam)]/15 text-[var(--subject-islam)]'
+                          : 'bg-[var(--bg-subtle)] text-[var(--ink-muted)]'
                       }`}
                     >
-                      {mastered ? <CheckIcon className="w-3 h-3" /> : <BookOpenIcon className="w-3 h-3" />}
+                      {mastered ? (
+                        <CheckIcon className="w-3 h-3" />
+                      ) : (
+                        <BookOpenIcon className="w-3 h-3" />
+                      )}
                     </span>
                   </button>
                 );
               })}
 
               {displayedTopics.length === 0 && (
-                <p className="text-center py-6 text-xs text-[var(--text-muted)] font-sans-ui" dir="ltr">
+                <p className="text-center py-6 text-xs text-[var(--ink-muted)]" dir="ltr">
                   No matching topics found.
                 </p>
               )}
@@ -1359,20 +1390,20 @@ export default function HscIslam({
           {/* Topic Content Stage */}
           <section className="flex-1 w-full min-w-0">
             {activeTopicData ? (
-              <div className="space-y-5">
+              <div className="space-y-4">
                 {/* Topic Header Bar */}
-                <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] p-4 sm:p-5">
+                <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-4 sm:p-5">
                   <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-4">
                     {/* Controls: Notes vs Flashcards + Expand/Collapse */}
                     <div className="flex flex-wrap items-center gap-2">
-                      <div className="inline-flex p-1 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)]">
+                      <div className="inline-flex p-0.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-warm-strong)]">
                         <button
                           type="button"
                           onClick={() => setViewMode('notes')}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
                             viewMode === 'notes'
-                              ? 'bg-[var(--accent-primary)] text-white shadow-2xs'
-                              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                              ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                              : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                           }`}
                         >
                           <NoteIcon className="w-3.5 h-3.5" />
@@ -1381,10 +1412,10 @@ export default function HscIslam({
                         <button
                           type="button"
                           onClick={() => setViewMode('flashcards')}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
                             viewMode === 'flashcards'
-                              ? 'bg-[var(--accent-gold)] text-white shadow-2xs'
-                              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                              ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                              : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                           }`}
                         >
                           <CardDeckIcon className="w-3.5 h-3.5" />
@@ -1395,19 +1426,20 @@ export default function HscIslam({
                       </div>
 
                       {viewMode === 'notes' &&
-                        (activeTopicData.keyPoints?.length > 0 || activeTopicData.definitions?.length > 0) && (
+                        (activeTopicData.keyPoints?.length > 0 ||
+                          activeTopicData.definitions?.length > 0) && (
                           <div className="inline-flex items-center gap-1">
                             <button
                               type="button"
                               onClick={() => setAllAccordions(true)}
-                              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                              className="px-2.5 py-1.5 rounded-md text-xs font-medium bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] transition-colors"
                             >
                               Expand All
                             </button>
                             <button
                               type="button"
                               onClick={() => setAllAccordions(false)}
-                              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                              className="px-2.5 py-1.5 rounded-md text-xs font-medium bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] transition-colors"
                             >
                               Collapse All
                             </button>
@@ -1415,14 +1447,14 @@ export default function HscIslam({
                         )}
 
                       {viewMode === 'flashcards' && (activeTopicData.definitions?.length || 0) > 0 && (
-                        <div className="inline-flex p-1 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)]">
+                        <div className="inline-flex p-0.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-warm-strong)]">
                           <button
                             type="button"
                             onClick={() => setFlashcardMode('deck')}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
                               flashcardMode === 'deck'
-                                ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-2xs'
-                                : 'text-[var(--text-secondary)]'
+                                ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                                : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                             }`}
                           >
                             <CardDeckIcon className="w-3.5 h-3.5" />
@@ -1431,10 +1463,10 @@ export default function HscIslam({
                           <button
                             type="button"
                             onClick={() => setFlashcardMode('grid')}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
                               flashcardMode === 'grid'
-                                ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-2xs'
-                                : 'text-[var(--text-secondary)]'
+                                ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                                : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                             }`}
                           >
                             <GridIcon className="w-3.5 h-3.5" />
@@ -1449,18 +1481,18 @@ export default function HscIslam({
                       {(activeTopicData.strandTitle || activeTopicData.isMemorization) && (
                         <div className="flex flex-wrap items-center gap-1.5">
                           {activeTopicData.strandTitle && (
-                            <span className="dhivehi-text px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--accent-primary-soft)] text-[var(--accent-primary)]">
+                            <span className="dhivehi-text px-2 py-0.5 rounded text-xs font-medium bg-[var(--subject-biology-bg)] text-[var(--subject-biology)] border border-[var(--subject-biology-border)]">
                               {activeTopicData.strandTitle}
                             </span>
                           )}
                           {activeTopicData.isMemorization && (
-                            <span className="dhivehi-text px-2.5 py-0.5 rounded-full text-xs font-bold bg-[var(--accent-gold-soft)] text-[var(--accent-gold)] border border-[var(--accent-gold)]/30">
+                            <span className="dhivehi-text px-2 py-0.5 rounded text-xs font-semibold bg-[var(--subject-islam-bg)] text-[var(--subject-islam)] border border-[var(--subject-islam-border)]">
                               ހިތުދަސްކުރަންޖެހޭ ޙަދީޘް
                             </span>
                           )}
                         </div>
                       )}
-                      <h2 className="dhivehi-text text-xl sm:text-2xl font-bold text-[var(--text-primary)] text-right leading-[1.9]">
+                      <h2 className="dhivehi-text text-xl sm:text-2xl font-bold text-[var(--ink-primary)] text-right leading-[1.95]">
                         {cleanText(activeTopicData.topicTitle)}
                       </h2>
                     </div>
@@ -1515,7 +1547,7 @@ export default function HscIslam({
                           <button
                             type="button"
                             onClick={() => setDeckFlipped(prev => !prev)}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[var(--accent-gold)] text-white hover:opacity-95 shadow-xs"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] hover:bg-[var(--action-primary-hover)] transition-colors"
                           >
                             <FlipIcon className="w-4 h-4" />
                             <span>Flip Card</span>
@@ -1645,10 +1677,14 @@ export default function HscIslam({
   };
 
   return (
-    <div className="max-w-7xl mx-auto w-full space-y-5">
-      {/* HSC Module / Section Sub-Nav */}
-      <div className="flex justify-center">
-        <div className="inline-flex items-center gap-1 p-1.5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-card)] overflow-x-auto max-w-full no-scrollbar">
+    <div className="w-full space-y-5">
+      {/* Connected HSC Underline Sub-Tabs Bar */}
+      <div className="border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] rounded-t-lg px-2 sm:px-4">
+        <div
+          role="tablist"
+          aria-label="HSC AS/A2 Modules and Tools"
+          className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-full"
+        >
           {tabs.map(tab => {
             const TabIcon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -1656,18 +1692,20 @@ export default function HscIslam({
               <button
                 key={tab.id}
                 type="button"
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => {
                   setActiveTab(tab.id);
                   setSearchQuery('');
                   if (tab.id === 'facts') generateRandomFact();
                 }}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3 py-3 text-[13.5px] font-medium whitespace-nowrap border-b-[2.5px] -mb-px transition-colors shrink-0 ${
                   isActive
-                    ? 'bg-[var(--accent-primary)] text-white shadow-xs'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]'
+                    ? 'border-[var(--subject-islam)] text-[var(--subject-islam)] font-semibold'
+                    : 'border-transparent text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                 }`}
               >
-                {TabIcon && <TabIcon className="w-4 h-4" />}
+                {TabIcon && <TabIcon className="w-3.5 h-3.5 shrink-0" />}
                 <span>{tab.label}</span>
               </button>
             );
